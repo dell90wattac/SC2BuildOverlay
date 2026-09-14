@@ -103,6 +103,7 @@ const TERMS = {
   Spire: '둥지탑',
   GreaterSpire: '거대 둥지탑',
   NydusNetwork: '땅굴망',
+  NydusCanal: '땅굴 벌레',
   UltraliskCavern: '울트라리스크 동굴',
   CreepTumor: '점막 종양',
 
@@ -132,6 +133,7 @@ const TERMS = {
   TunnelingClaws: '땅굴 발톱',
   GroovedSpines: '가시 홈',
   MuscularAugments: '근육 보강',
+  NanomuscularSwell: '나노 근육 팽창',
   Burrow: '잠복',
   PneumatizedCarapace: '기낭 갑피',
   ChitinousPlating: '키틴질 장갑',

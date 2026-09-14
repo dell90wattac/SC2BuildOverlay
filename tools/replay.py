@@ -14,8 +14,13 @@ Where each time comes from:
   times is followed by N units of one kind after a consistent gap, and the
   shortest of those gaps is the build time. Derived beats tabulated when it
   works, because it sees the Chrono Boost that was actually used.
-- Everything the derivation cannot pin down — a unit built once, every research
-  — falls back to BUILD_TIME / RESEARCH_TIME below.
+- Researches: the press is in the commands too, and `research_presses` finds it
+  the same way — an ability whose every use falls inside the window where this
+  upgrade could have been ordered. Chrono Boost makes this necessary rather than
+  merely nicer: it shortens the research but not the table, so subtracting the
+  table from the completion lands the step up to a third of the research early.
+- Everything neither can pin down — a unit built once, a research whose press is
+  ambiguous — falls back to BUILD_TIME / RESEARCH_TIME below.
 
 The report says which of the two produced each number, so a wrong table entry
 is visible rather than silently believed.
@@ -64,7 +69,7 @@ NOISE = re.compile(
     r'RichVespeneGeyser|XelNaga|AdeptPhaseShift|Interceptor|Locust|Broodling|'
     r'Changeling|.*Cocoon|.*Egg|Larva|KD8Charge|AutoTurret|ForceField|'
     r'DisruptorPhased|OracleStasisTrap|CreepTumor|PurificationNova|'
-    r'ParasiticBombDummy|InfestedTerran|MULE|PointDefenseDrone|'
+    r'.*Dummy|InfestedTerran|MULE|PointDefenseDrone|'
     r'RavenScramblerMissile|RavenRepairDrone)')
 NOISE_UPGRADE = re.compile(r'(Reward|Spray|GameHeart|Dance|Emote)')
 
@@ -98,6 +103,18 @@ SWAP_WINDOW = 40 * LOOPS
 # of the numbered abilities without a name table.
 MIN_CHRONO = 2
 
+# Chrono Boost is the only thing that speeds a research up, and it caps at +50%.
+# Nothing slows one down. Together those bound where the press can be.
+CHRONO_MAX = 1.5
+# The table is whole seconds where the game's own numbers are not, so a research
+# that ran at full speed can still miss its own window by a few loops.
+SPAN_SLACK = 1.03
+# Identifying the ability is what the window above is for. Once it is known,
+# the press outranks the table — a table entry can simply be wrong, and two of
+# them were — so all that is left to check is that the press is not absurd,
+# which is what catches an ability a patch has renumbered.
+TRUST_SPAN = (0.5, 1.5)
+
 # Chrono Boost goes on a Nexus or on something that produces or researches.
 # Listing them is what stops an attack order on an own building from being
 # mistaken for it.
@@ -122,7 +139,7 @@ BUILD_TIME = {
     'Phoenix': 25, 'VoidRay': 43, 'Oracle': 37, 'Tempest': 43, 'Carrier': 64,
     'Mothership': 89,
     # Terran
-    'SCV': 12, 'Marine': 18, 'Marauder': 21, 'Reaper': 32, 'Ghost': 29,
+    'SCV': 12, 'Marine': 18, 'Marauder': 21, 'Reaper': 34, 'Ghost': 29,
     'Hellion': 21, 'HellionTank': 21, 'WidowMine': 21, 'SiegeTank': 32,
     'Cyclone': 32, 'Thor': 43, 'VikingFighter': 30, 'Medivac': 30,
     'Liberator': 43, 'Raven': 34, 'Banshee': 43, 'Battlecruiser': 64,
@@ -166,9 +183,11 @@ RESEARCH_TIME = {
     'VehicleAndShipPlating1': 114, 'VehicleAndShipPlating2': 136,
     'VehicleAndShipPlating3': 157,
     # Zerg
-    'MetabolicBoost': 100, 'AdrenalGlands': 93, 'CentrifugalHooks': 79,
+    'MetabolicBoost': 79, 'AdrenalGlands': 93, 'CentrifugalHooks': 79,
     'GlialReconstitution': 79, 'TunnelingClaws': 79,
-    'GroovedSpines': 71, 'MuscularAugments': 71,
+    'GroovedSpines': 50, 'MuscularAugments': 64,
+    # `Frenzy` in the replay: 1440 loops in every one that has it.
+    'NanomuscularSwell': 64,
     'AdaptiveTalons': 57, 'SeismicSpines': 57,
     'PneumatizedCarapace': 43, 'Burrow': 71,
     'ChitinousPlating': 79, 'AnabolicSynthesis': 79,
@@ -206,6 +225,8 @@ ALIASES = {
     'ZerglingMovementSpeed': 'MetabolicBoost',
     'ZerglingAttackSpeed': 'AdrenalGlands',
     'CentrificalHooks': 'CentrifugalHooks',
+    'DrillClaws': 'DrillingClaws',
+    'Frenzy': 'NanomuscularSwell',
     'EvolveGroovedSpines': 'GroovedSpines',
     'EvolveMuscularAugments': 'MuscularAugments',
     'overlordspeed': 'PneumatizedCarapace',
@@ -214,6 +235,126 @@ ALIASES = {
     'LurkerRange': 'SeismicSpines',
     'InfestorEnergyUpgrade': 'PathogenGlands',
 }
+
+
+# Which numbered ability orders which research, as read off replays by
+# research_abilities() below. It is game data rather than anything this tool
+# decides, so it holds from one replay to the next and is worth keeping: one
+# replay on its own often cannot name more than a couple of these, and without
+# them a Protoss research falls back to the table and lands early.
+#
+# Read from 5.0.16 (base build 97563) over 217 replays. A patch may renumber
+# an ability, so
+# nothing here is trusted on sight: a seeded id is used only where this run
+# could not work the answer out for itself, and only when its press still falls
+# inside the window the research could have been ordered in. A renumbered one
+# simply stops matching and the table takes over again.
+RESEARCH_ABILITY = {
+    # Roach Warren
+    'GlialReconstitution': (109, 1),
+    # Engineering Bay
+    'HiSecAutoTracking': (164, 0), 'TerranInfantryWeaponsLevel1': (164, 2),
+    'TerranInfantryArmorsLevel1': (164, 6),
+    # Barracks Tech Lab
+    'Stimpack': (167, 0), 'ShieldWall': (167, 1), 'PunisherGrenades': (167, 2),
+    # Factory Tech Lab
+    'HighCapacityBarrels': (168, 1),
+    # Armory
+    'TerranVehicleWeaponsLevel1': (171, 5),
+    'TerranVehicleAndShipArmorsLevel1': (171, 14),
+    # Forge
+    'ProtossGroundWeaponsLevel1': (182, 0),
+    'ProtossGroundWeaponsLevel2': (182, 1),
+    'ProtossGroundArmorsLevel1': (182, 3),
+    'ProtossGroundArmorsLevel2': (182, 4), 'ProtossShieldsLevel1': (182, 6),
+    # Robotics Bay
+    'ExtendedThermalLance': (183, 5),
+    # Templar Archives
+    'PsiStormTech': (184, 4),
+    # Evolution Chamber
+    'ZergMeleeWeaponsLevel1': (187, 0), 'ZergMeleeWeaponsLevel2': (187, 1),
+    'ZergGroundArmorsLevel1': (187, 3), 'ZergGroundArmorsLevel2': (187, 4),
+    'ZergMissileWeaponsLevel1': (187, 6),
+    # Hatchery
+    'overlordspeed': (191, 1), 'Burrow': (191, 3),
+    # Spawning Pool
+    'zerglingattackspeed': (192, 0), 'zerglingmovementspeed': (192, 1),
+    # Hydralisk Den
+    'EvolveGroovedSpines': (193, 0), 'EvolveMuscularAugments': (193, 1),
+    'Frenzy': (193, 2),
+    # Spire
+    'ZergFlyerWeaponsLevel1': (194, 0),
+    # Baneling Nest
+    'CentrificalHooks': (226, 0),
+    # Cybernetics Core
+    'ProtossAirWeaponsLevel1': (238, 0), 'ProtossAirArmorsLevel1': (238, 3),
+    'WarpGateResearch': (238, 6),
+    # Twilight Council
+    'Charge': (239, 0), 'BlinkTech': (239, 1), 'AdeptPiercingAttack': (239, 2),
+    # Lurker Den
+    'LurkerRange': (715, 1),
+}
+
+
+RESEARCH_STRUCTURE = {
+    109: 'RoachWarren', 164: 'EngineeringBay', 167: 'BarracksTechLab',
+    168: 'FactoryTechLab', 171: 'Armory', 182: 'Forge', 183: 'RoboticsBay',
+    184: 'TemplarArchive', 187: 'EvolutionChamber', 191: 'Hatchery',
+    192: 'SpawningPool', 193: 'HydraliskDen', 194: 'Spire',
+    226: 'BanelingNest', 238: 'CyberneticsCore', 239: 'TwilightCouncil',
+    715: 'LurkerDenMP',
+}
+
+# Which ability trains which unit, read off 217 replays the same way
+# RESEARCH_ABILITY was: an ability that pairs with a unit's births game after
+# game, one ability to one unit. The ids group themselves by the building that
+# owns them, which is the check that they are right — 161 turns out to be the
+# Barracks, 174 the Gateway, 176 the Robotics Facility, and no id explains two
+# buildings' worth of units.
+#
+# Workers are absent on purpose: they collapse to one `계속 생산` line, so their
+# timing is not a step anyone follows. Zerg is absent because it has none —
+# a Zerg unit morphs from a larva rather than being trained, so there are no
+# press-to-birth pairs to read. Zerg does not need them either: nothing in that
+# race speeds production up, so the table subtraction is already exact.
+TRAIN_ABILITY = {
+    # Barracks
+    'Marine': (161, 0), 'Reaper': (161, 1), 'Marauder': (161, 3),
+    # Factory
+    'SiegeTank': (162, 1), 'Thor': (162, 4), 'Hellion': (162, 5),
+    'Cyclone': (162, 7), 'WidowMine': (162, 24),
+    # Starport
+    'Medivac': (163, 0), 'Raven': (163, 2), 'Battlecruiser': (163, 3),
+    'VikingFighter': (163, 4), 'Liberator': (163, 6),
+    # Gateway
+    'Zealot': (174, 0), 'Stalker': (174, 1), 'Sentry': (174, 5),
+    'Adept': (174, 6),
+    # Stargate
+    'Phoenix': (175, 0), 'VoidRay': (175, 4), 'Oracle': (175, 8),
+    'Tempest': (175, 9),
+    # Robotics Facility
+    'WarpPrism': (176, 0), 'Observer': (176, 1), 'Colossus': (176, 2),
+    'Immortal': (176, 3),
+}
+
+# What each of those ability ids belongs to. Nothing can be ordered from a
+# building before the building is finished, which is the floor every fallback
+# gets held to — a table time subtracted off a Chrono Boosted unit otherwise
+# reports it a few seconds before the building that made it existed.
+PRODUCER = {
+    161: 'Barracks', 162: 'Factory', 163: 'Starport',
+    174: 'Gateway', 175: 'Stargate', 176: 'RoboticsFacility',
+}
+
+# The tracker spells some upgrades entirely in lower case —
+# `zerglingmovementspeed` beside `ZerglingAttackSpeed` in the same replay — and
+# which ones it does that to is not a list worth keeping twice.
+ALIASES_CI = {key.lower(): value for key, value in ALIASES.items()}
+
+
+def alias_of(name):
+    """The alias for a name whatever its case, or the name unchanged."""
+    return ALIASES.get(name) or ALIASES_CI.get(name.lower()) or name
 
 
 def txt(value):
@@ -579,11 +720,22 @@ def chrono_steps(replay, player):
 
 
 def births(replay, player):
+    """Units this player produced, by kind.
+
+    A birth names the ability that made it, which is how a hallucination is
+    told from the real thing. A 파수기 scouting with a hallucinated 예언자 is
+    ordinary Protoss play and the corpus has ninety-nine of them; every one was
+    turning up in a build order as a 예언자 nobody built, dragging a step into
+    the list that cannot be followed and that vanishes again in forty seconds.
+    """
     out = {}
     for event in replay.tracker:
         if not event['_event'].endswith('SUnitBornEvent'):
             continue
         if event.get('m_controlPlayerId') != player['id'] or event['_gameloop'] == 0:
+            continue
+        made_by = event.get('m_creatorAbilityName')
+        if made_by and txt(made_by).startswith('Hallucination'):
             continue
         name = txt(event['m_unitTypeName'])
         if not NOISE.match(name):
@@ -686,8 +838,12 @@ def collapse(steps):
     """One line per decision. Workers run all game, so they become one line."""
     out = []
     seen = set()
+    merged = set()
     index = 0
     while index < len(steps):
+        if index in merged:
+            index += 1
+            continue
         step = steps[index]
         if step['name'] in WORKERS and step['kind'] == 'unit':
             if step['name'] not in seen:
@@ -695,21 +851,32 @@ def collapse(steps):
                 out.append(dict(step, count=1, filler=True))
             index += 1
             continue
-        count = 1
         # Same kind as well as same name. Two Tech Labs built together are one
         # line, but one built and one taken in a swap are two different
         # decisions — merging them swallowed the swap and its note.
-        while (index + count < len(steps)
-               and steps[index + count]['name'] == step['name']
-               and steps[index + count]['kind'] == step['kind']
-               and steps[index + count]['loop'] - step['loop'] <= 12 * LOOPS):
-            count += 1
+        #
+        # Scanned past anything that happens in between rather than stopping at
+        # it: two 광전사 a second apart with an 관측선 landing between them are
+        # still one `광전사 2기`, and before this they broke into two lines
+        # whenever something else shared the moment.
+        count = 0
+        ahead = index
+        while (ahead < len(steps)
+               and steps[ahead]['loop'] - step['loop'] <= 12 * LOOPS):
+            if (steps[ahead]['name'] == step['name']
+                    and steps[ahead]['kind'] == step['kind']):
+                count += 1
+                merged.add(ahead)
+            ahead += 1
         out.append(dict(step, count=count, filler=False))
-        index += count
+        index += 1
     return out
 
 
 RACE_PREFIX = re.compile(r'^(Terran|Zerg|Protoss)(?=[A-Z])')
+# `LurkerDenMP`, `SwarmHostMP`, `LurkerMP`: a multiplayer suffix the replay
+# carries and the dictionary never does.
+MP_SUFFIX = re.compile(r'MP$')
 LEVEL_SUFFIX = re.compile(r'Level(\d)$')
 ADDON = re.compile(r'^(\w+?)(TechLab|Reactor)$')
 
@@ -734,9 +901,19 @@ def normalize(name):
     def drop_level(word):
         return LEVEL_SUFFIX.sub(lambda m: m.group(1), word)
 
-    stem = ALIASES.get(name, name)
+    stem = alias_of(name)
     plain = RACE_PREFIX.sub('', stem)
     flat = drop_level(plain)
+
+    # The multiplayer suffix, and the alias that may be hiding behind it.
+    bare = MP_SUFFIX.sub('', flat) if MP_SUFFIX.search(flat) else None
+
+    # `TemplarArchive` in the replay, `TemplarArchives` in the dictionary.
+    # Which of the pair is the plural one is not worth a rule in each
+    # direction, so both spellings are offered and the tables pick.
+    other = None
+    if flat[-1:].isalpha():
+        other = flat[:-1] if flat.endswith('s') else flat + 's'
 
     # 'ProtossGroundArmorsLevel1' -> 'GroundArmor1'. The replay pluralises the
     # thing being upgraded, the dictionary does not, and the difference sits
@@ -766,6 +943,7 @@ def normalize(name):
 
     seen = set()
     for candidate in (name, stem, zergish, plain, flat, singular, numbered,
+                      bare, alias_of(bare) if bare else None, other,
                       ALIASES.get(plain), ALIASES.get(flat),
                       drop_level(ALIASES.get(plain, plain))):
         if candidate and candidate not in seen:
@@ -796,7 +974,230 @@ def korean_for(name, terms):
     return None
 
 
-def steps_for(replay, player, derived, extras=None):
+def command_presses(replay, player):
+    """Every untargeted ability press, by ability.
+
+    A research is cast on a structure that is already selected, so it carries
+    no target of its own. Move, attack and building placement all carry one,
+    which is most of what a game's commands are.
+    """
+    out = collections.defaultdict(list)
+    if player['user'] is None:
+        return out
+    for event in replay.game:
+        if not event['_event'].endswith('SCmdEvent'):
+            continue
+        if (event.get('_userid') or {}).get('m_userId') != player['user']:
+            continue
+        ability = event.get('m_abil') or {}
+        if ability.get('m_abilLink') is None:
+            continue
+        data = event.get('m_data') or {}
+        if data.get('TargetUnit') or data.get('TargetPoint'):
+            continue
+        out[(ability['m_abilLink'], ability.get('m_abilCmdIndex'))].append(
+            event['_gameloop'])
+    return out
+
+
+def upgrades_of(replay, player):
+    """(name, the loop it finished on, how long it takes) per research done."""
+    out = []
+    for event in replay.tracker:
+        if not event['_event'].endswith('SUpgradeEvent'):
+            continue
+        if event['m_playerId'] != player['id'] or event['_gameloop'] <= 0:
+            continue
+        name = txt(event['m_upgradeTypeName'])
+        if NOISE_UPGRADE.search(name) or any(name == row[0] for row in out):
+            continue
+        span, source = research_time(name)
+        if source != 'unknown':
+            out.append((name, event['_gameloop'], span))
+    return out
+
+
+def window(done, span, chrono):
+    """Where the press that started a research has to be.
+
+    Chrono Boost is the only thing in the game that speeds a research up and it
+    caps at +50%; nothing slows one down. It is also Protoss only, so for the
+    other two races the press sits on the table value and the window is barely
+    wider than the rounding in it — which is the point: opening it a third of
+    the way for a race that cannot use it lets every unrelated keypress in that
+    stretch pass for the research, and one of them will be picked.
+    """
+    quick = span / CHRONO_MAX if chrono else span / SPAN_SLACK
+    return done - span * SPAN_SLACK, done - quick
+
+
+def research_abilities(replays_and_players):
+    """Which numbered ability orders which research, decided over every replay
+    at once.
+
+    One replay often cannot tell. A dozen abilities get pressed once in a game,
+    and any of them landing inside the window explains the research just as
+    well as the real one — 돌진 had four such candidates in one replay, and
+    picking among them by how few times they were pressed is a coin toss that
+    silently produces a wrong time. Across replays the coincidences do not
+    repeat and the real ability does, so the answer is the intersection.
+
+    A single replay still resolves whatever it can, and what it cannot falls
+    back to the table and is reported. Convert a folder rather than one file
+    and the rest resolve too.
+    """
+    seen = collections.defaultdict(list)
+    for replay, player in replays_and_players:
+        presses = command_presses(replay, player)
+        if not presses:
+            continue
+        chrono = RACE_CODE.get(player['race']) == 'P'
+        for name, done, span in upgrades_of(replay, player):
+            first, last = window(done, span, chrono)
+            seen[name].append({key for key, loops in presses.items()
+                               if all(first <= loop <= last for loop in loops)})
+
+    narrowed = {name: set.intersection(*sets)
+                for name, sets in seen.items() if sets}
+
+    # One ability orders one research, so a key another research has already
+    # claimed is not this one's, and resolving the certain ones first can leave
+    # a single candidate behind for the rest.
+    out, taken = {}, set()
+    settled = False
+    while not settled:
+        settled = True
+        for name, keep in narrowed.items():
+            if name in out:
+                continue
+            free = [key for key in keep if key not in taken]
+            # Two abilities equally able to explain it means neither is
+            # identified, and a build order with the wrong time on it is worse
+            # than one that falls back to the table and says so.
+            if len(free) != 1:
+                continue
+            # Two researches down to the same last candidate cannot both be it,
+            # and there is nothing to say which. Claiming it for whichever came
+            # first in the list is a coin toss, so neither gets it.
+            if any(other != name and free[0] in rest and
+                   len([key for key in rest if key not in taken]) == 1
+                   for other, rest in narrowed.items() if other not in out):
+                continue
+            out[name] = free[0]
+            taken.add(free[0])
+            settled = False
+
+    # What these replays proved wins; the seed only fills what they could not
+    # reach. research_presses() checks either against this replay's own window
+    # before using it.
+    merged = dict(RESEARCH_ABILITY)
+    merged.update(out)
+    return merged
+
+
+def first_finished(replay, player):
+    """When each kind of building this player owns was first finished.
+
+    An add-on answers to more than one name — a Tech Lab is `BarracksTechLab`
+    while it sits on a Barracks and plain `TechLab` once it is detached — so
+    every spelling reports the earliest of them. Otherwise a floor keyed on
+    `BarracksTechLab` misses the Tech Lab that was finished on a Starport and
+    walked over later.
+    """
+    out, init = {}, {}
+    for event in replay.tracker:
+        kind = event['_event'].rsplit('.', 1)[-1]
+        if kind == 'SUnitInitEvent' and event.get('m_controlPlayerId') == player['id']:
+            init[event['m_unitTagIndex']] = txt(event['m_unitTypeName'])
+        elif kind == 'SUnitDoneEvent' and event['m_unitTagIndex'] in init:
+            name = init[event['m_unitTagIndex']]
+            done = event['_gameloop']
+            spellings = {name}
+            attached = ADDON_ON.match(name)
+            if attached:
+                bare = attached.group(2)
+                spellings |= {bare, 'Barracks' + bare, 'Factory' + bare,
+                              'Starport' + bare}
+            for spelling in spellings:
+                if done < out.get(spelling, done + 1):
+                    out[spelling] = done
+    return out
+
+
+def train_presses(replay, player, born):
+    """The loop each trained unit was actually ordered on.
+
+    The same problem researches had, and the same answer. A unit's step is
+    currently its birth less a build time, which is right until the building
+    was Chrono Boosted — and a 거신 under boost arrives nearly twenty seconds
+    before the table says it could, which drags its step that far back past
+    whatever else was happening.
+
+    Presses pair to births first in, first out, the way a production queue
+    works. A queued unit therefore reports the moment it was queued rather than
+    the moment the building got to it, which is the more useful of the two: it
+    is what the player did, and it keeps two units ordered together on one line
+    instead of splitting them a build time apart.
+    """
+    out = {}
+    presses = command_presses(replay, player)
+    for name, loops in born.items():
+        key = TRAIN_ABILITY.get(name)
+        if key is None or key not in presses:
+            continue
+        cmd = sorted(presses[key])
+        # Paired birth by birth rather than all or nothing. A press can be
+        # missing — a unit restarted after a cancel, a command the replay did
+        # not keep — and giving up on the whole unit for one gap throws away
+        # the presses that were there. A birth left without one keeps its
+        # table time.
+        picked, at = {}, 0
+        for birth in sorted(loops):
+            while at < len(cmd) and (cmd[at] >= birth or birth - cmd[at] > MAX_GAP):
+                at += 1
+            if at >= len(cmd):
+                break
+            # A gap shorter than this is not this birth's press: Chrono Boost
+            # caps at +50%, so nothing arrives sooner than that.
+            if birth - cmd[at] >= MIN_GAP:
+                picked[birth] = cmd[at]
+                at += 1
+        if picked:
+            out[name] = picked
+    return out
+
+
+def research_presses(replay, player, abilities):
+    """The loop each research was actually ordered on, where it is known.
+
+    Subtracting the research time from the completion event is only right when
+    the research ran at normal speed. Chrono Boost shortens the research but
+    not the table, so the step lands up to a third of the research time early —
+    far enough to put 점멸 at 3:24 off a 황혼 의회 that is not finished until
+    3:53. The press has no such problem, and it is the moment the player acted,
+    which is the only thing a build order is a list of.
+
+    The window is checked again here rather than trusted from the pooled pass:
+    ability ids are game data and a patch may renumber them, and a press that
+    no longer fits is one this replay should not use.
+    """
+    out = {}
+    if not abilities:
+        return out
+    presses = command_presses(replay, player)
+    for name, done, span in upgrades_of(replay, player):
+        key = abilities.get(name)
+        if key is None:
+            continue
+        first = done - span * TRUST_SPAN[1]
+        last = done - span * TRUST_SPAN[0]
+        fits = [loop for loop in presses.get(key, []) if first <= loop <= last]
+        if fits:
+            out[name] = min(fits)
+    return out
+
+
+def steps_for(replay, player, derived, abilities, extras=None):
     """Every step, timed at the moment it was started.
 
     @param extras  which optional kinds to include: 'chrono', 'mule', 'swap'.
@@ -808,6 +1209,8 @@ def steps_for(replay, player, derived, extras=None):
     unknown = set()
 
     owner, _ = unit_tags(replay)
+    finished = first_finished(replay, player)
+    presses = research_presses(replay, player, abilities)
     steps += morph_steps(replay, player, owner)
     if 'swap' in extras:
         steps += swap_steps(replay, player, owner)
@@ -828,19 +1231,32 @@ def steps_for(replay, player, derived, extras=None):
         elif kind == 'SUpgradeEvent' and event['m_playerId'] == player['id']:
             name = txt(event['m_upgradeTypeName'])
             if loop > 0 and not NOISE_UPGRADE.search(name):
+                at = presses.get(name)
+                if at is not None:
+                    steps.append({'loop': at, 'name': name, 'kind': 'upgrade',
+                                  'source': 'event'})
+                    continue
                 span, source = research_time(name)
                 if source == 'unknown':
                     unknown.add(name)
-                steps.append({'loop': max(0, loop - span), 'name': name,
+                key = RESEARCH_ABILITY.get(name)
+                floor = finished.get(RESEARCH_STRUCTURE.get(key[0])) if key else None
+                steps.append({'loop': max(floor or 0, loop - span), 'name': name,
                               'kind': 'upgrade', 'source': source})
 
-    for name, loops in births(replay, player).items():
+    born = births(replay, player)
+    trained = train_presses(replay, player, born)
+    for name, loops in born.items():
+        pressed = trained.get(name) or {}
         span, source = build_time(name, derived)
-        if source == 'unknown':
+        if source == 'unknown' and len(pressed) < len(loops):
             unknown.add(name)
+        floor = finished.get(PRODUCER.get((TRAIN_ABILITY.get(name) or (None,))[0]), 0)
         for loop in loops:
-            steps.append({'loop': max(0, loop - span), 'name': name,
-                          'kind': 'unit', 'source': source})
+            at = pressed.get(loop)
+            steps.append({'loop': at if at is not None else max(floor, loop - span),
+                          'name': name, 'kind': 'unit',
+                          'source': 'event' if at is not None else source})
 
     steps.sort(key=lambda s: s['loop'])
     return steps, unknown
@@ -908,13 +1324,13 @@ def label(step, terms, buildings, missing):
     return korean
 
 
-def build_text(replay, player, derived, terms, buildings, limit=None,
-               extras=None):
+def build_text(replay, player, derived, abilities, terms, buildings,
+               limit=None, extras=None):
     """The build file's text, plus what went into it.
 
     @returns (lines, step count, {time source: n}, unknown names, no-build-time names)
     """
-    steps, unknown = steps_for(replay, player, derived, extras)
+    steps, unknown = steps_for(replay, player, derived, abilities, extras)
     if limit:
         steps = [s for s in steps if s['loop'] <= limit]
     rows = collapse(steps)
@@ -1000,6 +1416,7 @@ def run_json(args):
 
     picked = [(replay, choose(replay.players(), args.player)) for replay in loaded]
     derived = derive_build_times(picked)
+    abilities = research_abilities(picked)
     terms = load_terms(args.repo)
     buildings = load_buildings(args.repo)
     limit = args.minutes * 60 * LOOPS if args.minutes else None
@@ -1007,7 +1424,8 @@ def run_json(args):
     out = []
     for replay, player in picked:
         lines, count, sources, missing, unknown = build_text(
-            replay, player, derived, terms, buildings, limit, args.extras)
+            replay, player, derived, abilities, terms, buildings, limit,
+            args.extras)
         out.append({
             'file': replay.path,
             'name': os.path.splitext(os.path.basename(replay.path))[0],
@@ -1078,6 +1496,7 @@ def main():
 
     picked = [(replay, choose(replay.players(), args.player)) for replay in loaded]
     derived = derive_build_times(picked)
+    abilities = research_abilities(picked)
     terms = load_terms(args.repo)
     buildings = load_buildings(args.repo)
     limit = args.minutes * 60 * LOOPS if args.minutes else None
@@ -1094,7 +1513,8 @@ def main():
     for replay, player in picked:
         name = os.path.splitext(os.path.basename(replay.path))[0]
         lines, count, sources, missing, unknown = build_text(
-            replay, player, derived, terms, buildings, limit, args.extras)
+            replay, player, derived, abilities, terms, buildings, limit,
+            args.extras)
         write_lines(os.path.join(args.out, name + '.txt'), lines)
         report.append('%s  <- %s (%s)' % (name, player['name'], player['race']))
         if replay.fell_back_to:
