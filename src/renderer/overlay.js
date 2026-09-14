@@ -241,6 +241,13 @@ window.overlay.onView((view) => {
   // does not follow it — that is the 가로 폭 setting — so a larger size trades
   // room for the action text, which ellipsises rather than wrapping.
   document.documentElement.style.setProperty('--step-scale', view.settings.stepScale || 1);
+  /* Every blue in the stylesheet is an offset from this angle, so the frame,
+     the rules, the times and the numbers all turn together. The step bands
+     (--now / --accent / --danger) deliberately do not: they say when, not
+     which theme. `?? ` rather than `||` because 0 is a real hue (red) and a
+     real saturation (grey). */
+  document.documentElement.style.setProperty('--hud-h', view.settings.themeHue ?? 207);
+  document.documentElement.style.setProperty('--hud-sat', view.settings.themeSat ?? 1);
   // The header is the only thing the window can be dragged by, so a hidden one
   // comes back while unlocked — otherwise turning it off would strand the panel
   // wherever it happened to be.

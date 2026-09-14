@@ -29,6 +29,7 @@ const el = {
   iconsSmall: $('icons-small'),
   iconsLarge: $('icons-large'),
   iconsHint: $('icons-hint'),
+  themeSwatches: $('theme-swatches'),
   showHeader: $('show-header'),
   showFooter: $('show-footer'),
   iconsFetchRow: $('icons-fetch-row'),
@@ -273,6 +274,13 @@ function renderSettings(view) {
   if (!busy(el.lead)) el.lead.value = settings.leadSeconds;
   el.leadValue.textContent = `${settings.leadSeconds}초`;
 
+  const hue = settings.themeHue ?? 207;
+  const sat = settings.themeSat ?? 1;
+  for (const swatch of el.themeSwatches.children) {
+    const mine = Number(swatch.dataset.hue) === hue && Number(swatch.dataset.sat) === sat;
+    swatch.classList.toggle('on', mine);
+  }
+
   const iconMode = settings.iconMode || 'none';
   el.iconsNone.classList.toggle('on', iconMode === 'none');
   el.iconsSmall.classList.toggle('on', iconMode === 'small');
@@ -378,6 +386,55 @@ el.showHeader.addEventListener('click', () =>
 el.showFooter.addEventListener('click', () =>
   patchSettings({ showFooter: !(current && current.settings.showFooter !== false) })
 );
+
+/**
+ * The frame hues on offer.
+ *
+ * Warm angles are missing on purpose. 4° (임박), 40° (지금 할 줄) and 134°
+ * (여유) already mean something in the overlay, and a frame sitting on one of
+ * them swallows the band that means it — a green frame hides `여유` with no
+ * error to see. Every hue here clears all three, and they clear each other.
+ *
+ * 회색 is the same idea with the colour taken out rather than moved.
+ */
+const THEMES = [
+  { name: '청록', hue: 175, sat: 1 },
+  { name: '하늘', hue: 193, sat: 1 },
+  { name: '청색', hue: 207, sat: 1 },
+  { name: '남색', hue: 230, sat: 1 },
+  { name: '남보라', hue: 255, sat: 1 },
+  { name: '보라', hue: 282, sat: 1 },
+  { name: '자홍', hue: 310, sat: 1 },
+  // The warm half is only reachable with the colour turned down. At full
+  // saturation a tan frame is the gold row's own hue and swallows it; muted,
+  // the contrast moves from hue to saturation and the gold still lands first.
+  { name: '모래', hue: 35, sat: 0.35 },
+  { name: '올리브', hue: 85, sat: 0.35 },
+  { name: '회색', hue: 210, sat: 0.12 },
+];
+
+for (const theme of THEMES) {
+  const swatch = document.createElement('button');
+  swatch.type = 'button';
+  swatch.className = 'swatch';
+  swatch.dataset.hue = theme.hue;
+  swatch.dataset.sat = theme.sat;
+
+  // Mixed from the same numbers the stylesheet uses, so the chip is the frame
+  // it will produce rather than an approximation someone has to keep in step.
+  const chip = document.createElement('i');
+  chip.style.setProperty('--sw-edge', `hsl(${theme.hue} ${72 * theme.sat}% 64%)`);
+  chip.style.setProperty('--sw-fill', `hsl(${theme.hue + 5} ${64 * theme.sat}% 22%)`);
+
+  const label = document.createElement('span');
+  label.textContent = theme.name;
+
+  swatch.append(chip, label);
+  swatch.addEventListener('click', () =>
+    patchSettings({ themeHue: theme.hue, themeSat: theme.sat })
+  );
+  el.themeSwatches.append(swatch);
+}
 
 el.iconsNone.addEventListener('click', () => patchSettings({ iconMode: 'none' }));
 el.iconsSmall.addEventListener('click', () => patchSettings({ iconMode: 'small' }));

@@ -333,6 +333,8 @@ function settingsSnapshot() {
     // leaving the option looking broken.
     iconsAvailable: stepIcons.loaded(),
     iconFetch,
+    themeHue: config.get('themeHue'),
+    themeSat: config.get('themeSat'),
     showHeader: config.get('showHeader'),
     showFooter: config.get('showFooter'),
     opacity: config.get('opacity'),

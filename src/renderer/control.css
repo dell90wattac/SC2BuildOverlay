@@ -317,6 +317,52 @@ h2 {
   font-weight: 650;
 }
 
+/* Theme swatches. Each one carries its name as text, not only as colour: the
+   offered hues run teal → blue → violet → purple → magenta, which is exactly
+   the range red-green colour blindness compresses. A row of unlabelled squares
+   would be unpickable for the people most likely to want to change them. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem 0.35rem;
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.68rem;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.swatch i {
+  display: block;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 5px;
+  /* Two tones, because a theme is a frame over a dark ground rather than one
+     flat colour — a single block reads much brighter than the result. */
+  background: linear-gradient(135deg, var(--sw-edge) 45%, var(--sw-fill) 45%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.swatch.on {
+  color: var(--text);
+}
+
+.swatch.on i {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 0 0 2px var(--bg),
+    0 0 0 3px var(--accent);
+}
+
 .corners {
   display: grid;
   grid-template-columns: 1fr 1fr;

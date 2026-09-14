@@ -20,6 +20,12 @@ const DEFAULTS = {
   // 'none' | 'small' | 'large' — unit/building pictures beside the step text.
   // Off by default: someone who knows the game reads the text faster.
   iconMode: 'none',
+  // The overlay frame's hue, 0-359. Stored as the angle rather than a preset
+  // name so a value outside the offered list still renders, and so adding or
+  // moving a swatch later is not a settings migration. 207 is the original
+  // blue. themeSat is a 0..1 multiplier; the neutral swatch drops it.
+  themeHue: 207,
+  themeSat: 1,
   // Header and footer are reference, not the build: once you know the hotkeys
   // and the matchup, the panel can be the steps and nothing else.
   showHeader: true,

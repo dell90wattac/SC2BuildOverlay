@@ -43,6 +43,13 @@ const REPLAY_STATE = {
 const ICONS_DIR = path.join(__dirname, '..', 'assets', 'icons');
 // PREVIEW_ICONS=small|large to inspect the icon layouts.
 const ICON_MODE = process.env.PREVIEW_ICONS || 'none';
+// PREVIEW_THEME=<hue>[,<sat>] to inspect a theme colour, e.g. 290 or 210,0.12.
+// The renderer rewrites --hud-h on every push, so setting it by hand in the
+// console lasts a quarter of a second; it has to arrive with the settings.
+const [THEME_HUE = 207, THEME_SAT = 1] = (process.env.PREVIEW_THEME || '')
+  .split(',')
+  .map(Number)
+  .filter((n) => !Number.isNaN(n));
 
 const REPO = path.join(__dirname, '..');
 
@@ -278,7 +285,7 @@ const CONTROL_STUB = `<script>
   const BUILDS = ${JSON.stringify(BUILDS)};
   let running = false, t = 0, visible = true, locked = true, mode = 'auto', active = 'example-tvz.txt';
   let pinned = null, favs = [];
-  const settings = { iconMode: '${ICON_MODE}', iconsAvailable: true, iconFetch: null, showHeader: true, showFooter: true, opacity: 0.9, scale: 1, stepScale: 1, widthScale: 1, overlayWidth: 380, lookahead: 6, lookbehind: 1, leadSeconds: 3, autoPick: true, autoStart: false, autoStartOnGame: false, myName: '', soundEnabled: true, soundVolume: 0.5, soundFile: null, soundProblem: null };
+  const settings = { iconMode: '${ICON_MODE}', themeHue: ${THEME_HUE}, themeSat: ${THEME_SAT}, iconsAvailable: true, iconFetch: null, showHeader: true, showFooter: true, opacity: 0.9, scale: 1, stepScale: 1, widthScale: 1, overlayWidth: 380, lookahead: 6, lookbehind: 1, leadSeconds: 3, autoPick: true, autoStart: false, autoStartOnGame: false, myName: '', soundEnabled: true, soundVolume: 0.5, soundFile: null, soundProblem: null };
   let listener = null;
   const step = { at: 72, supply: 19, action: '사령부 (앞마당)' };
   function emit() {
@@ -410,7 +417,7 @@ const OVERLAY_STUB = `<script>
   document.head.append(bg);
 
   const STEPS = ${JSON.stringify(OVERLAY_STEPS)};
-  const settings = { iconMode: '${ICON_MODE}', iconsAvailable: true, opacity: 0.9, scale: 1, stepScale: 1, widthScale: 1, overlayWidth: 380, showHeader: true, showFooter: true, lookahead: 6, lookbehind: 1, leadSeconds: 0 };
+  const settings = { iconMode: '${ICON_MODE}', themeHue: ${THEME_HUE}, themeSat: ${THEME_SAT}, iconsAvailable: true, opacity: 0.9, scale: 1, stepScale: 1, widthScale: 1, overlayWidth: 380, showHeader: true, showFooter: true, lookahead: 6, lookbehind: 1, leadSeconds: 0 };
   let t = 66, listener = null;
   function emit() {
     if (!listener) return;
