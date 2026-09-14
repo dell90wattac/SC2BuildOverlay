@@ -335,6 +335,7 @@ function settingsSnapshot() {
     iconFetch,
     themeHue: config.get('themeHue'),
     themeSat: config.get('themeSat'),
+    gauge: config.get('gauge'),
     showHeader: config.get('showHeader'),
     showFooter: config.get('showFooter'),
     opacity: config.get('opacity'),

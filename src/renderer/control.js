@@ -30,6 +30,7 @@ const el = {
   iconsLarge: $('icons-large'),
   iconsHint: $('icons-hint'),
   themeSwatches: $('theme-swatches'),
+  gauge: $('gauge'),
   showHeader: $('show-header'),
   showFooter: $('show-footer'),
   iconsFetchRow: $('icons-fetch-row'),
@@ -281,6 +282,8 @@ function renderSettings(view) {
     swatch.classList.toggle('on', mine);
   }
 
+  el.gauge.checked = settings.gauge !== false;
+
   const iconMode = settings.iconMode || 'none';
   el.iconsNone.classList.toggle('on', iconMode === 'none');
   el.iconsSmall.classList.toggle('on', iconMode === 'small');
@@ -435,6 +438,8 @@ for (const theme of THEMES) {
   );
   el.themeSwatches.append(swatch);
 }
+
+el.gauge.addEventListener('change', () => patchSettings({ gauge: el.gauge.checked }));
 
 el.iconsNone.addEventListener('click', () => patchSettings({ iconMode: 'none' }));
 el.iconsSmall.addEventListener('click', () => patchSettings({ iconMode: 'small' }));

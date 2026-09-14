@@ -5,6 +5,11 @@ const IMMINENT_SECONDS = 8;
    the two it is the thing to get ready for; below IMMINENT_SECONDS it is the
    thing to do now. The countdown is coloured by which band it is in. */
 const CAUTION_SECONDS = 20;
+/* How long the shrinking fill spans. Ten because that is the number a countdown
+   starts from, so half a band reads as five seconds without doing arithmetic.
+   It also stacks with the pulse rather than colliding: the fill starts at ten,
+   the pulse joins at eight. */
+const GAUGE_SECONDS = 10;
 
 const el = {
   panel: document.getElementById('panel'),
@@ -116,6 +121,23 @@ function renderSteps(view) {
       // moving — parked at 0:00 while stopped, it would cry wolf.
       const live = view.running && view.game.inGame && ui.mode === 'auto';
       if (live && until <= IMMINENT_SECONDS) li.classList.add('imminent');
+
+      /* The countdown as a quantity rather than digits: the band's lit interior
+         shrinks over the last GAUGE_SECONDS. Only inside that window — setting
+         a starting width while an animation runs towards zero made the right
+         edge dip on every push and snap back on the next, which reads as a
+         flutter for as long as the step is far off.
+
+         The animation lives on the row rather than a transition because the
+         list is rebuilt four times a second: a transition on a brand-new
+         element has no previous value to move from, so the fill would step. The
+         animation restarts from where the fill is now and runs out the real
+         remaining time, which lands in the same place every rebuild. */
+      if (counting && settings.gauge !== false && until <= GAUGE_SECONDS) {
+        li.classList.add('counting');
+        li.style.setProperty('--left', `${(until / GAUGE_SECONDS) * 100}%`);
+        li.style.setProperty('--remain', `${until}s`);
+      }
     }
 
     // Where this step falls in the build. Reading "3" against a 55-step order

@@ -26,6 +26,9 @@ const DEFAULTS = {
   // blue. themeSat is a 0..1 multiplier; the neutral swatch drops it.
   themeHue: 207,
   themeSat: 1,
+  // The band's lit interior shrinks over the last ten seconds. On by default:
+  // it is the countdown the row already prints, as a quantity instead of digits.
+  gauge: true,
   // Header and footer are reference, not the build: once you know the hotkeys
   // and the matchup, the panel can be the steps and nothing else.
   showHeader: true,

@@ -617,13 +617,43 @@ body.icons-large .step {
   /* Dark inside, gold only on the line and the type. Filling the band with gold
      made it the loudest thing on screen; an outline says "here" just as clearly
      and leaves the name the brightest thing in the row. */
-  background:
+  background-image:
+    /* The gauge: a lit band that shrinks with the time left. Sized rather than
+       redrawn, so only `background-size` has to move. Full width while the row
+       carries no --left, which is every row that is not counting down. */
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--cur) 20%, transparent),
+      color-mix(in srgb, var(--cur) 20%, transparent)
+    ),
     radial-gradient(120% 130% at 0% 50%, color-mix(in srgb, var(--cur) 15%, transparent), transparent 62%),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--cur) 9%, hsl(calc(var(--hud-h) + 11) calc(66% * var(--hud-sat)) 7%)) 0%,
       color-mix(in srgb, var(--cur) 4%, hsl(calc(var(--hud-h) + 14) calc(76% * var(--hud-sat)) 3%)) 100%
     );
+  /* Every layer is given a size: `auto` cannot be interpolated, and one
+     non-interpolatable layer makes the whole list animate discretely — which is
+     the stepping the animation exists to avoid. For a gradient the two are the
+     same picture anyway. */
+  background-size: var(--left, 100%) 100%, 100% 100%, 100% 100%;
+  background-position: left center, 0 0, 0 0;
+  background-repeat: no-repeat, repeat, repeat;
+}
+
+/* Runs on the pseudo-element, not the row: --left is read here, and the row's
+   own animation slot is spoken for by the imminent pulse. */
+.step.next.counting::before {
+  animation: band-drain var(--remain) linear forwards;
+}
+
+@keyframes band-drain {
+  from {
+    background-size: var(--left) 100%, 100% 100%, 100% 100%;
+  }
+  to {
+    background-size: 0% 100%, 100% 100%, 100% 100%;
+  }
 }
 
 /* A slow sheen crossing the band. The one moving thing on the panel, and it
