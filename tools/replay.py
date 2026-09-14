@@ -187,7 +187,7 @@ RESEARCH_TIME = {
     'GlialReconstitution': 79, 'TunnelingClaws': 79,
     'GroovedSpines': 50, 'MuscularAugments': 64,
     # `Frenzy` in the replay: 1440 loops in every one that has it.
-    'NanomuscularSwell': 64,
+    'Frenzy': 64,
     'AdaptiveTalons': 57, 'SeismicSpines': 57,
     'PneumatizedCarapace': 43, 'Burrow': 71,
     'ChitinousPlating': 79, 'AnabolicSynthesis': 79,
@@ -226,7 +226,6 @@ ALIASES = {
     'ZerglingAttackSpeed': 'AdrenalGlands',
     'CentrificalHooks': 'CentrifugalHooks',
     'DrillClaws': 'DrillingClaws',
-    'Frenzy': 'NanomuscularSwell',
     'EvolveGroovedSpines': 'GroovedSpines',
     'EvolveMuscularAugments': 'MuscularAugments',
     'overlordspeed': 'PneumatizedCarapace',

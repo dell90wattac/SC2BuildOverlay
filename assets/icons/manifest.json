@@ -205,6 +205,8 @@
     "공중 무기 3단계": "btn-upgrade-protoss-airweaponslevel3",
     "공중 장갑 1단계": "btn-upgrade-protoss-airarmorlevel1",
     "공중 장갑 2단계": "btn-upgrade-protoss-airarmorlevel2",
-    "공중 장갑 3단계": "btn-upgrade-protoss-airarmorlevel3"
+    "공중 장갑 3단계": "btn-upgrade-protoss-airarmorlevel3",
+    "나노 근육 팽창": "btn-upgrade-zerg-frenzy",
+    "땅굴 벌레": "btn-building-zerg-nydusworm"
   }
 }

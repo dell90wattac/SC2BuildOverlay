@@ -133,7 +133,7 @@ const TERMS = {
   TunnelingClaws: '땅굴 발톱',
   GroovedSpines: '가시 홈',
   MuscularAugments: '근육 보강',
-  NanomuscularSwell: '나노 근육 팽창',
+  Frenzy: '나노 근육 팽창',
   Burrow: '잠복',
   PneumatizedCarapace: '기낭 갑피',
   ChitinousPlating: '키틴질 장갑',

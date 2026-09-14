@@ -38,6 +38,9 @@ const ALIASES = {
      the pack's own `unit_icons.json` is what gives it away. */
   OrbitalCommand: 'btn-building-terran-surveillancestation',
   SensorTower: 'btn-building-terran-sensordome',
+  /* 땅굴 벌레. The replay calls it a Nydus Canal and the icon pack a Nydus
+     Worm, and `btn-building-zerg-nyduscanal` does not exist. */
+  NydusCanal: 'btn-building-zerg-nydusworm',
   HellionTank: 'btn-unit-terran-hellionbattlemode',
   Hellbat: 'btn-unit-terran-hellionbattlemode',
   Viking: 'btn-unit-terran-vikingfighter',
