@@ -332,6 +332,8 @@ function settingsSnapshot() {
     // So the control window can say the pictures are missing rather than
     // leaving the option looking broken.
     iconsAvailable: stepIcons.loaded(),
+    // Pictures an update added that this machine has not fetched yet.
+    iconsShort: stepIcons.missing(),
     iconFetch,
     themeHue: config.get('themeHue'),
     themeSat: config.get('themeSat'),

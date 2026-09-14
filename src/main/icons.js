@@ -19,6 +19,7 @@ let terms = [];
 let baseUrl = null;
 let loadError = null;
 let haveImages = false;
+let shortBy = 0;
 
 /**
  * @param dir directory holding the PNGs and `manifest.json`
@@ -30,6 +31,7 @@ function load(dir) {
   baseUrl = null;
   loadError = null;
   haveImages = false;
+  shortBy = 0;
   try {
     const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
     const entries = Object.entries(manifest.terms || {});
@@ -39,10 +41,15 @@ function load(dir) {
     baseUrl = pathToFileURL(dir + path.sep).href;
     /* The manifest ships with the app; the images do not — they are fetched on
        request. So a readable manifest says nothing about whether there is
-       anything to draw, and on a fresh install there is not. Sampling one file
-       is enough to tell the two states apart, and cheap enough to do on every
-       load. */
-    haveImages = terms.some((t) => fs.existsSync(path.join(dir, t.file)));
+       anything to draw, and on a fresh install there is not.
+       Counted rather than sampled, because an update can add a term to the
+       manifest that nobody has the picture for yet. Several terms share one
+       file — 갑피 1단계 and 지상 갑피 1단계 are the same image — so files are what
+       gets counted. */
+    const files = [...new Set(terms.map((t) => t.file))];
+    const here = files.filter((file) => fs.existsSync(path.join(dir, file)));
+    haveImages = here.length > 0;
+    shortBy = files.length - here.length;
   } catch (err) {
     loadError = err.message;
   }
@@ -54,6 +61,14 @@ function load(dir) {
    no images behind it left a new install with empty icon slots and nothing on
    screen explaining how to fill them. */
 const loaded = () => terms.length > 0 && haveImages;
+
+/* How many of the manifest's pictures are not on disk. A separate question
+   from loaded(): that one asks whether there is anything to draw, this asks
+   whether there is anything left to fetch. An install holding every icon of
+   the previous version still wants the ones an update added, and offering the
+   내려받기 button only where there were no pictures at all left nobody a way to
+   ask for them. */
+const missing = () => shortBy;
 
 /**
  * Icons for one action line, in the order the terms appear in the text.
@@ -107,4 +122,4 @@ function allTerms() {
     .map(({ term, file }) => ({ term, src: withImages ? baseUrl + file : null }));
 }
 
-module.exports = { load, loaded, iconsFor, allTerms };
+module.exports = { load, loaded, missing, iconsFor, allTerms };

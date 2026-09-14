@@ -291,18 +291,24 @@ function renderSettings(view) {
   // Nothing to explain while it works — 없음/작게/크게 says it. But an icon
   // folder that failed to load would leave the option looking simply broken.
   const iconsMissing = settings.iconsAvailable === false;
+  const iconsShort = Number(settings.iconsShort) || 0;
+  const anyToFetch = iconsMissing || iconsShort > 0;
   const fetch = settings.iconFetch;
   const fetching = Boolean(fetch && fetch.running);
 
-  el.iconsHint.hidden = !iconsMissing || fetching;
+  el.iconsHint.hidden = !anyToFetch || fetching;
   el.iconsHint.textContent = iconsMissing
     ? '그림 파일이 아직 없습니다. 아래에서 내려받으면 단계 옆에 표시됩니다.'
-    : '';
+    : iconsShort
+      ? `이번 판올림에서 늘어난 그림 ${iconsShort}개가 아직 없습니다. 내려받으면 채워집니다.`
+      : '';
+  // Only an empty set is a warning. A couple of new pictures is an errand.
   el.iconsHint.classList.toggle('warn', iconsMissing && !fetching);
 
   // Only offered when there is something to do: nothing to fetch once the set
-  // is in place, and no reason to mention the network otherwise.
-  el.iconsFetchRow.hidden = !iconsMissing && !fetching && !(fetch && fetch.message);
+  // is complete, and no reason to mention the network otherwise. An update that
+  // adds a term adds a picture nobody has yet, which is also something to do.
+  el.iconsFetchRow.hidden = !anyToFetch && !fetching && !(fetch && fetch.message);
   el.iconsFetch.disabled = fetching;
   el.iconsFetch.textContent = fetching ? '받는 중…' : '그림 내려받기';
   el.iconsFetchState.textContent = fetching
