@@ -311,6 +311,15 @@ RESEARCH_STRUCTURE = {
 # Barracks, 174 the Gateway, 176 the Robotics Facility, and no id explains two
 # buildings' worth of units.
 #
+# All 217 were 5.0.16 (base build 97563), so this is confirmed for one build and
+# says nothing about whether a patch keeps the numbering — m_abilLink is an
+# index into that build's ability table, not a stable id. Unlike a research,
+# which is re-checked against the window it could have been ordered in, a train
+# press has only its gap to a birth to vouch for it, and a renumbered ability
+# would still hand back gaps in a plausible range. So it is checked against the
+# one thing that cannot be coincidence: nothing is trained from a building the
+# player never finished.
+#
 # Workers are absent on purpose: they collapse to one `계속 생산` line, so their
 # timing is not a step anyone follows. Zerg is absent because it has none —
 # a Zerg unit morphs from a larva rather than being trained, so there are no
@@ -1166,9 +1175,15 @@ def train_presses(replay, player, born):
     """
     out = {}
     presses = command_presses(replay, player)
+    owns = first_finished(replay, player)
     for name, loops in born.items():
         key = TRAIN_ABILITY.get(name)
         if key is None or key not in presses:
+            continue
+        # The ability says which building it belongs to; if that building was
+        # never finished this player cannot have ordered from it, and the id no
+        # longer means what the table says. The table time takes over.
+        if producer_of(name) not in owns:
             continue
         cmd = sorted(presses[key])
         # Paired birth by birth rather than all or nothing. A press can be
