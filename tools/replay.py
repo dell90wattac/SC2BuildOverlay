@@ -698,11 +698,29 @@ def unit_tags(replay):
         if tag is None:
             continue
         if kind in ('SUnitBornEvent', 'SUnitInitEvent'):
-            owner[tag] = event.get('m_controlPlayerId')
+            owner.setdefault(tag, []).append(
+                (event['_gameloop'], event.get('m_controlPlayerId')))
             kind_of[tag] = txt(event['m_unitTypeName'])
         elif kind == 'SUnitTypeChangeEvent':
             kind_of[tag] = txt(event['m_unitTypeName'])
     return owner, kind_of
+
+
+def owner_at(owner, tag, loop):
+    """Who held this tag at that moment.
+
+    A tag is a slot, not a name: the game hands it to a new unit once the old
+    one dies. One game has a 저그 대군주 on tag 216 at 0:52 and a 테란 불곰 on
+    the same tag at 13:13, so a map holding only the latest owner said the
+    Overlord belonged to the Terran — and a 감시 군주 turned up in a Terran
+    build order. Only the owner as of the event being asked about will do.
+    """
+    who = None
+    for at, player_id in owner.get(tag, ()):
+        if at > loop:
+            break
+        who = player_id
+    return who
 
 
 def morph_steps(replay, player, owner):
@@ -717,7 +735,7 @@ def morph_steps(replay, player, owner):
         if not event['_event'].endswith('SUnitTypeChangeEvent'):
             continue
         tag = event['m_unitTagIndex']
-        if owner.get(tag) != player['id']:
+        if owner_at(owner, tag, event['_gameloop']) != player['id']:
             continue
         name = txt(event['m_unitTypeName'])
         if name not in MORPHS:
@@ -741,7 +759,7 @@ def unit_morph_steps(replay, player, owner):
         if not event['_event'].endswith('SUnitTypeChangeEvent'):
             continue
         tag = event['m_unitTagIndex']
-        if owner.get(tag) != player['id']:
+        if owner_at(owner, tag, event['_gameloop']) != player['id']:
             continue
         name = txt(event['m_unitTypeName'])
         becomes = UNIT_MORPHS.get(name)
@@ -791,7 +809,8 @@ def swap_steps(replay, player, owner):
         if building is None:
             # Came off. Named for the building it was on, which is the one
             # that just gave up its add-on.
-            if was and was != 'unknown' and owner.get(tag) == player['id']:
+            if (was and was != 'unknown'
+                    and owner_at(owner, tag, event['_gameloop']) == player['id']):
                 hosted[tag] = was
                 # Named for the add-on alone, with the building it left in the
                 # note. Calling it `우주공항 기술실 분리` and then
@@ -803,7 +822,8 @@ def swap_steps(replay, player, owner):
                             'from': was})
             continue
         # Only a move onto a building counts; going bare was handled above.
-        if was is not None or owner.get(tag) != player['id']:
+        if (was is not None
+                or owner_at(owner, tag, event['_gameloop']) != player['id']):
             continue
         out.append({'loop': event['_gameloop'], 'name': building + part,
                     'kind': 'swap', 'source': 'event',
@@ -856,7 +876,7 @@ def chrono_steps(replay, player):
             continue
         # The tracker's tag index sits in the high bits of a command's tag.
         index = target['m_tag'] >> 18
-        if owner.get(index) != player['id']:
+        if owner_at(owner, index, event['_gameloop']) != player['id']:
             continue
         by_ability[(ability['m_abilLink'], ability.get('m_abilCmdIndex'))].append(
             (event['_gameloop'], kind_of.get(index)))
