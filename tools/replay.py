@@ -276,6 +276,25 @@ ALIASES = {
 RESEARCH_ABILITY = {
     # Fusion Core
     'MedivacCaduceusReactor': (237, 3),
+    # Read the same way over 91 replays. Seeded rather than left to be
+    # relearned because the app converts one replay at a time, and a single
+    # game names only a couple of these — which is why an upgrade that came out
+    # fine on the command line fell back to the table inside the editor.
+    'TerranInfantryWeaponsLevel2': (164, 3), 'TerranInfantryWeaponsLevel3': (164, 4),
+    'TerranInfantryArmorsLevel3': (164, 8),
+    'DrillClaws': (168, 4), 'SmartServos': (168, 6),
+    'BansheeSpeed': (169, 9), 'InterferenceMatrix': (169, 17),
+    'PersonalCloaking': (170, 0),
+    'TerranVehicleWeaponsLevel2': (171, 6), 'TerranVehicleWeaponsLevel3': (171, 7),
+    'TerranShipWeaponsLevel2': (171, 12), 'TerranShipWeaponsLevel3': (171, 13),
+    'TerranVehicleAndShipArmorsLevel3': (171, 16),
+    'ProtossGroundWeaponsLevel3': (182, 2), 'ProtossGroundArmorsLevel3': (182, 5),
+    'ProtossShieldsLevel2': (182, 7), 'ProtossShieldsLevel3': (182, 8),
+    'ObserverGraviticBooster': (183, 1), 'GraviticDrive': (183, 2),
+    'ZergMissileWeaponsLevel2': (187, 7), 'ZergMissileWeaponsLevel3': (187, 8),
+    'ZergFlyerWeaponsLevel3': (194, 2), 'ZergFlyerArmorsLevel3': (194, 5),
+    'NeuralParasite': (225, 3),
+    'DarkTemplarBlinkUpgrade': (714, 0),
     # Roach Warren
     'GlialReconstitution': (109, 1),
     # Engineering Bay
@@ -328,7 +347,8 @@ RESEARCH_STRUCTURE = {
     184: 'TemplarArchive', 187: 'EvolutionChamber', 191: 'Hatchery',
     192: 'SpawningPool', 193: 'HydraliskDen', 194: 'Spire',
     226: 'BanelingNest', 238: 'CyberneticsCore', 239: 'TwilightCouncil',
-    237: 'FusionCore', 715: 'LurkerDenMP',
+    169: 'StarportTechLab', 170: 'GhostAcademy', 225: 'InfestationPit',
+    237: 'FusionCore', 714: 'DarkShrine', 715: 'LurkerDenMP',
 }
 
 # Which ability trains which unit, read off 217 replays the same way
@@ -358,7 +378,8 @@ RESEARCH_STRUCTURE = {
 # numbers agree with the table to within two per cent across 447 저글링.
 TRAIN_ABILITY = {
     # Barracks
-    'Marine': (161, 0), 'Reaper': (161, 1), 'Marauder': (161, 3),
+    'Marine': (161, 0), 'Reaper': (161, 1), 'Ghost': (161, 2),
+    'Marauder': (161, 3),
     # Factory
     'SiegeTank': (162, 1), 'Thor': (162, 4), 'Hellion': (162, 5),
     'Cyclone': (162, 7), 'WidowMine': (162, 24),
@@ -380,7 +401,7 @@ TRAIN_ABILITY = {
     # Larva
     'Zergling': (195, 1), 'Overlord': (195, 2), 'Hydralisk': (195, 3),
     'Mutalisk': (195, 4), 'Ultralisk': (195, 6), 'Roach': (195, 9),
-    'Corruptor': (195, 11),
+    'Corruptor': (195, 11), 'Infestor': (195, 10), 'Viper': (195, 12),
     # Hatchery
     'Queen': (245, 0),
 }
