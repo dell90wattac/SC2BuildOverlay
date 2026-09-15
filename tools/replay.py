@@ -132,6 +132,7 @@ CHRONO_TARGETS = {
 RACE_CODE = {'프로토스': 'P', '테란': 'T', '저그': 'Z',
              'Protoss': 'P', 'Terran': 'T', 'Zerg': 'Z'}
 
+
 # Build times, in the same seconds `loops / LOOPS` produces. Only reached when
 # the replay itself cannot say — a unit built once, or a research, which happens
 # once and so gives the matcher nothing to lock onto.
@@ -367,7 +368,7 @@ TRAIN_ABILITY = {
     'VikingFighter': (163, 4), 'Liberator': (163, 6),
     # Gateway
     'Zealot': (174, 0), 'Stalker': (174, 1), 'HighTemplar': (174, 3),
-    'Sentry': (174, 5), 'Adept': (174, 6),
+    'DarkTemplar': (174, 4), 'Sentry': (174, 5), 'Adept': (174, 6),
     # Stargate
     'Phoenix': (175, 0), 'Carrier': (175, 2), 'VoidRay': (175, 4),
     'Oracle': (175, 8), 'Tempest': (175, 9),
@@ -411,11 +412,9 @@ STARTING = {'Hatchery', 'Nexus', 'CommandCenter'}
 # 집정관 is a merge rather than a unit that is trained, but both templars come
 # out of a Gateway, so that is still the earliest it can have happened.
 TRAINED_AT = {
-    # 암흑 기사 never appeared in the corpus, so its index on the Gateway card
-    # is still unread — 174 shows only 0, 1, 3, 5 and 6 across 72 replays, all
-    # of them claimed. 집정관 is two templars merging rather than a unit that is
-    # trained, so it has no train ability to find.
-    'DarkTemplar': 'Gateway',
+    # 집정관 is two templars merging rather than a unit that is trained, so
+    # there is no train ability to find and the Gateway both came out of is the
+    # earliest the merge can have happened.
     'Archon': 'Gateway',
     'Nuke': 'GhostAcademy',
 }
