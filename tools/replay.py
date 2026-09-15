@@ -153,7 +153,7 @@ BUILD_TIME = {
     'Phoenix': 25, 'VoidRay': 43, 'Oracle': 37, 'Tempest': 43, 'Carrier': 64,
     'Mothership': 89,
     # Terran
-    'SCV': 12, 'Marine': 18, 'Marauder': 21, 'Reaper': 34, 'Ghost': 29,
+    'SCV': 12, 'Nuke': 42.9, 'Marine': 18, 'Marauder': 21, 'Reaper': 34, 'Ghost': 29,
     'Hellion': 21, 'HellionTank': 21, 'WidowMine': 21, 'SiegeTank': 32,
     'Cyclone': 32, 'Thor': 43, 'VikingFighter': 30, 'Medivac': 30,
     'Liberator': 43, 'Raven': 34, 'Banshee': 43, 'Battlecruiser': 64,
@@ -366,14 +366,16 @@ TRAIN_ABILITY = {
     'Battlecruiser': (163, 3),
     'VikingFighter': (163, 4), 'Liberator': (163, 6),
     # Gateway
-    'Zealot': (174, 0), 'Stalker': (174, 1), 'Sentry': (174, 5),
-    'Adept': (174, 6),
+    'Zealot': (174, 0), 'Stalker': (174, 1), 'HighTemplar': (174, 3),
+    'Sentry': (174, 5), 'Adept': (174, 6),
     # Stargate
-    'Phoenix': (175, 0), 'VoidRay': (175, 4), 'Oracle': (175, 8),
-    'Tempest': (175, 9),
+    'Phoenix': (175, 0), 'Carrier': (175, 2), 'VoidRay': (175, 4),
+    'Oracle': (175, 8), 'Tempest': (175, 9),
     # Robotics Facility
     'WarpPrism': (176, 0), 'Observer': (176, 1), 'Colossus': (176, 2),
-    'Immortal': (176, 3),
+    'Immortal': (176, 3), 'Disruptor': (176, 18),
+    # Nexus
+    'Mothership': (76, 0),
     # Larva
     'Zergling': (195, 1), 'Overlord': (195, 2), 'Hydralisk': (195, 3),
     'Mutalisk': (195, 4), 'Ultralisk': (195, 6), 'Roach': (195, 9),
@@ -389,7 +391,7 @@ TRAIN_ABILITY = {
 PRODUCER = {
     161: 'Barracks', 162: 'Factory', 163: 'Starport',
     174: 'Gateway', 175: 'Stargate', 176: 'RoboticsFacility',
-    195: 'Hatchery', 245: 'Hatchery',
+    76: 'Nexus', 195: 'Hatchery', 245: 'Hatchery',
 }
 
 # Every player starts with one of these already standing, and a starting
@@ -409,12 +411,13 @@ STARTING = {'Hatchery', 'Nexus', 'CommandCenter'}
 # 집정관 is a merge rather than a unit that is trained, but both templars come
 # out of a Gateway, so that is still the earliest it can have happened.
 TRAINED_AT = {
-    'Mothership': 'Nexus',
-    'Carrier': 'Stargate',
-    'HighTemplar': 'Gateway',
+    # 암흑 기사 never appeared in the corpus, so its index on the Gateway card
+    # is still unread — 174 shows only 0, 1, 3, 5 and 6 across 72 replays, all
+    # of them claimed. 집정관 is two templars merging rather than a unit that is
+    # trained, so it has no train ability to find.
     'DarkTemplar': 'Gateway',
-    'Disruptor': 'RoboticsFacility',
     'Archon': 'Gateway',
+    'Nuke': 'GhostAcademy',
 }
 
 

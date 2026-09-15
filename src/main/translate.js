@@ -45,6 +45,7 @@ const TERMS = {
   Thor: '토르',
   Viking: '바이킹',
   Medivac: '의료선',
+  Nuke: '핵',
   Liberator: '해방선',
   Raven: '밤까마귀',
   Banshee: '밴시',
