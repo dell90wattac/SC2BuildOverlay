@@ -380,6 +380,8 @@ TRAIN_ABILITY = {
     # Barracks
     'Marine': (161, 0), 'Reaper': (161, 1), 'Ghost': (161, 2),
     'Marauder': (161, 3),
+    # Ghost Academy
+    'Nuke': (166, 0),
     # Factory
     'SiegeTank': (162, 1), 'Thor': (162, 4), 'Hellion': (162, 5),
     'Cyclone': (162, 7), 'WidowMine': (162, 24),
@@ -402,6 +404,7 @@ TRAIN_ABILITY = {
     'Zergling': (195, 1), 'Overlord': (195, 2), 'Hydralisk': (195, 3),
     'Mutalisk': (195, 4), 'Ultralisk': (195, 6), 'Roach': (195, 9),
     'Corruptor': (195, 11), 'Infestor': (195, 10), 'Viper': (195, 12),
+    'SwarmHostMP': (195, 14),
     # Hatchery
     'Queen': (245, 0),
 }
@@ -413,7 +416,7 @@ TRAIN_ABILITY = {
 PRODUCER = {
     161: 'Barracks', 162: 'Factory', 163: 'Starport',
     174: 'Gateway', 175: 'Stargate', 176: 'RoboticsFacility',
-    76: 'Nexus', 195: 'Hatchery', 245: 'Hatchery',
+    76: 'Nexus', 166: 'GhostAcademy', 195: 'Hatchery', 245: 'Hatchery',
 }
 
 # Every player starts with one of these already standing, and a starting
@@ -437,7 +440,11 @@ TRAINED_AT = {
     # there is no train ability to find and the Gateway both came out of is the
     # earliest the merge can have happened.
     'Archon': 'Gateway',
-    'Nuke': 'GhostAcademy',
+    # 화염기갑병 appears once in the corpus. The only command that could be its
+    # press sits forty seconds ahead of it and the build time is twenty-one, so
+    # that is some other keystroke that happened to land there — one sighting
+    # cannot tell a real pairing from a coincidence.
+    'HellionTank': 'Factory',
 }
 
 
