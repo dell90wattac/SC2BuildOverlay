@@ -127,14 +127,23 @@ CHRONO_TARGETS = {
 RACE_CODE = {'프로토스': 'P', '테란': 'T', '저그': 'Z',
              'Protoss': 'P', 'Terran': 'T', 'Zerg': 'Z'}
 
-# Seconds at normal speed. Only reached when the replay itself cannot say — a
-# unit built once, or a research, which happens once and so gives the matcher
-# nothing to lock onto. Where both exist the two agree (Stalker 27, Sentry 23),
-# which is the check that these numbers are right.
+# Build times, in the same seconds `loops / LOOPS` produces. Only reached when
+# the replay itself cannot say — a unit built once, or a research, which happens
+# once and so gives the matcher nothing to lock onto.
+#
+# The unit is the game's own `@time` divided by 1.4, checked against the balance
+# data the SC2 editor exports for this build: 수정탑 25 → 17.9, 연결체 100 → 71.4,
+# 추적자 38 → 27.1, all matching what the replays measure. An earlier note here
+# said these were the wiki's `SC2 Time` column; that column is 18 for a 수정탑,
+# and the game says 25, so the two are not the same number and several entries
+# had been copied across undivided.
+#
+# The balance data is Blizzard's, so it is read to check these numbers and never
+# vendored: what lives here is the handful of values this tool needs.
 BUILD_TIME = {
     # Protoss
-    'Probe': 12, 'Zealot': 27, 'Stalker': 27, 'Sentry': 23, 'Adept': 27,
-    'HighTemplar': 39, 'DarkTemplar': 39, 'Archon': 9, 'Observer': 21,
+    'Probe': 12, 'Zealot': 27, 'Stalker': 27, 'Sentry': 23, 'Adept': 32.5,
+    'HighTemplar': 40, 'DarkTemplar': 40, 'Archon': 9, 'Observer': 17.9,
     'WarpPrism': 36, 'Immortal': 39, 'Colossus': 54, 'Disruptor': 36,
     'Phoenix': 25, 'VoidRay': 43, 'Oracle': 37, 'Tempest': 43, 'Carrier': 64,
     'Mothership': 89,
@@ -145,33 +154,39 @@ BUILD_TIME = {
     'Liberator': 43, 'Raven': 34, 'Banshee': 43, 'Battlecruiser': 64,
     # Zerg
     'Drone': 12, 'Overlord': 18, 'Queen': 36, 'Zergling': 17, 'Baneling': 14,
-    'Roach': 19, 'Ravager': 9, 'Hydralisk': 24, 'Lurker': 18, 'Infestor': 29,
+    'Roach': 19, 'Ravager': 12.1, 'Hydralisk': 24, 'Lurker': 18, 'Infestor': 35.7,
     'SwarmHostMP': 29, 'Mutalisk': 24, 'Corruptor': 29, 'BroodLord': 24,
     'Viper': 29, 'Ultralisk': 39, 'Overseer': 12,
 }
 
-# Research times in seconds at normal speed, keyed the way normalize() files
-# them (race prefix and `Level` stripped), so one entry covers every spelling a
-# replay might use. Unlike BUILD_TIME these cannot be cross-checked against the
-# replay — a research happens once, so there is nothing to derive from — which
-# is why a step built on one of these is reported rather than just trusted.
+# Research times, same unit as BUILD_TIME, keyed the way normalize() files them
+# (race prefix and `Level` stripped) so one entry covers every spelling a replay
+# might use. Unlike BUILD_TIME these cannot be derived from a replay — a
+# research happens once — which is why a step built on one of these is reported
+# rather than just trusted.
+#
+# One key does not always serve three races: 프로토스 지상 무기 is 121.4 where
+# 테란 보병 무기 and 저그 근접 공격 are 114.3. That works out because each race
+# normalises to its own key first (저그 갑피 to GroundCarapace, 테란 보병 to
+# InfantryWeapons), leaving the bare GroundWeapons/GroundArmor entries serving
+# Protoss alone. Check that before editing one of those numbers.
 RESEARCH_TIME = {
     # Protoss
     'WarpGate': 100, 'Charge': 100, 'Blink': 121, 'ResonatingGlaives': 100,
     'PsiStorm': 79, 'GraviticBoosters': 57, 'GraviticDrive': 57,
     'ExtendedThermalLance': 100, 'ShadowStride': 100,
     'AnionPulseCrystals': 64, 'FluxVanes': 57, 'TectonicDestabilizers': 100,
-    'GroundWeapons1': 129, 'GroundWeapons2': 154, 'GroundWeapons3': 179,
-    'GroundArmor1': 129, 'GroundArmor2': 154, 'GroundArmor3': 179,
-    'ShieldsLevel1': 129, 'ShieldsLevel2': 154, 'ShieldsLevel3': 179,
+    'GroundWeapons1': 121.4, 'GroundWeapons2': 144.6, 'GroundWeapons3': 167.9,
+    'GroundArmor1': 121.4, 'GroundArmor2': 144.6, 'GroundArmor3': 167.9,
+    'ShieldsLevel1': 121.4, 'ShieldsLevel2': 144.6, 'ShieldsLevel3': 167.9,
     'AirWeapons1': 129, 'AirWeapons2': 154, 'AirWeapons3': 179,
     'AirArmor1': 129, 'AirArmor2': 154, 'AirArmor3': 179,
     # Terran
     'Stimpack': 100, 'CombatShield': 79, 'ConcussiveShells': 43,
     'InfernalPreigniter': 79, 'DrillingClaws': 79, 'SmartServos': 79,
-    'MagFieldAccelerator': 140, 'InterferenceMatrix': 57,
-    'CloakingField': 79, 'BansheeSpeed': 121,
-    'AdvancedBallistics': 79, 'YamatoCannon': 100, 'PersonalCloaking': 100,
+    'MagFieldAccelerator': 100, 'InterferenceMatrix': 57,
+    'CloakingField': 79, 'BansheeSpeed': 79,
+    'AdvancedBallistics': 79, 'YamatoCannon': 100, 'PersonalCloaking': 85.7,
     'HiSecAutoTracking': 57, 'BuildingArmor': 100, 'NeosteelArmor': 100,
     'InfantryWeapons1': 114, 'InfantryWeapons2': 136, 'InfantryWeapons3': 157,
     'InfantryArmor1': 114, 'InfantryArmor2': 136, 'InfantryArmor3': 157,
@@ -183,14 +198,14 @@ RESEARCH_TIME = {
     'VehicleAndShipPlating1': 114, 'VehicleAndShipPlating2': 136,
     'VehicleAndShipPlating3': 157,
     # Zerg
-    'MetabolicBoost': 79, 'AdrenalGlands': 93, 'CentrifugalHooks': 79,
+    'MetabolicBoost': 79, 'AdrenalGlands': 93, 'CentrifugalHooks': 71.4,
     'GlialReconstitution': 79, 'TunnelingClaws': 79,
     'GroovedSpines': 50, 'MuscularAugments': 64,
     # `Frenzy` in the replay: 1440 loops in every one that has it.
     'Frenzy': 64,
     'AdaptiveTalons': 57, 'SeismicSpines': 57,
     'PneumatizedCarapace': 43, 'Burrow': 71,
-    'ChitinousPlating': 79, 'AnabolicSynthesis': 79,
+    'ChitinousPlating': 79, 'AnabolicSynthesis': 42.9,
     'NeuralParasite': 79,
     'MeleeAttacks1': 114, 'MeleeAttacks2': 136, 'MeleeAttacks3': 157,
     'MissileAttacks1': 114, 'MissileAttacks2': 136, 'MissileAttacks3': 157,
