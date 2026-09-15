@@ -69,7 +69,7 @@ NOISE = re.compile(
     r'RichVespeneGeyser|XelNaga|AdeptPhaseShift|Interceptor|Locust|Broodling|'
     r'Changeling|.*Cocoon|.*Egg|Larva|KD8Charge|AutoTurret|ForceField|'
     r'DisruptorPhased|OracleStasisTrap|CreepTumor|PurificationNova|'
-    r'.*Dummy|InfestedTerran|MULE|PointDefenseDrone|'
+    r'.*Dummy|InfestedTerran|MULE|PointDefenseDrone|GhostAlternate|'
     r'RavenScramblerMissile|RavenRepairDrone)')
 NOISE_UPGRADE = re.compile(r'(Reward|Spray|GameHeart|Dance|Emote)')
 
@@ -97,6 +97,11 @@ ADDON_ON = re.compile(r'^(Barracks|Factory|Starport)?(TechLab|Reactor)$')
 # sat free and something else claimed it later, so the landing is its own
 # moment rather than a consequence of that lift.
 SWAP_WINDOW = 40 * LOOPS
+
+# How close two births have to be to have come from the same keypress. Units
+# started together finish together; a queue spaces them a build time apart, and
+# the shortest build in the game is nine seconds.
+SAME_PRESS = 1.5 * LOOPS
 
 # Chrono Boost only ever targets the caster's own production buildings, and
 # it is used more than once in any real game. That is enough to pick it out
@@ -187,6 +192,7 @@ RESEARCH_TIME = {
     'MagFieldAccelerator': 100, 'InterferenceMatrix': 57,
     'CloakingField': 79, 'BansheeSpeed': 79,
     'AdvancedBallistics': 79, 'YamatoCannon': 100, 'PersonalCloaking': 85.7,
+    'CaduceusReactor': 50,
     'HiSecAutoTracking': 57, 'BuildingArmor': 100, 'NeosteelArmor': 100,
     'InfantryWeapons1': 114, 'InfantryWeapons2': 136, 'InfantryWeapons3': 157,
     'InfantryArmor1': 114, 'InfantryArmor2': 136, 'InfantryArmor3': 157,
@@ -215,6 +221,9 @@ RESEARCH_TIME = {
 }
 
 ALIASES = {
+    # The replay names the research after the unit it helps; the dictionary and
+    # the icon pack both file it under the research's own name.
+    'MedivacCaduceusReactor': 'CaduceusReactor',
     # Only names no rule can reach: an internal name that looks nothing like
     # the displayed one. Anything differing by a race prefix, a `Level` before
     # the number, or a building-plus-add-on pairing is handled by normalize().
@@ -264,6 +273,8 @@ ALIASES = {
 # inside the window the research could have been ordered in. A renumbered one
 # simply stops matching and the table takes over again.
 RESEARCH_ABILITY = {
+    # Fusion Core
+    'MedivacCaduceusReactor': (237, 3),
     # Roach Warren
     'GlialReconstitution': (109, 1),
     # Engineering Bay
@@ -316,7 +327,7 @@ RESEARCH_STRUCTURE = {
     184: 'TemplarArchive', 187: 'EvolutionChamber', 191: 'Hatchery',
     192: 'SpawningPool', 193: 'HydraliskDen', 194: 'Spire',
     226: 'BanelingNest', 238: 'CyberneticsCore', 239: 'TwilightCouncil',
-    715: 'LurkerDenMP',
+    237: 'FusionCore', 715: 'LurkerDenMP',
 }
 
 # Which ability trains which unit, read off 217 replays the same way
@@ -336,10 +347,14 @@ RESEARCH_STRUCTURE = {
 # player never finished.
 #
 # Workers are absent on purpose: they collapse to one `계속 생산` line, so their
-# timing is not a step anyone follows. Zerg is absent because it has none —
-# a Zerg unit morphs from a larva rather than being trained, so there are no
-# press-to-birth pairs to read. Zerg does not need them either: nothing in that
-# race speeds production up, so the table subtraction is already exact.
+# timing is not a step anyone follows.
+#
+# Zerg was absent too, on the reasoning that a larva morph leaves no press to
+# pair. It does — link 195 is the larva and 245 the hatchery — but the pairing
+# gave up before it could see them: it required at least as many commands as
+# births, and selecting five larvae and pressing once makes ten 저글링 off one
+# command. Read the same way as the rest once that bar was lifted, and the
+# numbers agree with the table to within two per cent across 447 저글링.
 TRAIN_ABILITY = {
     # Barracks
     'Marine': (161, 0), 'Reaper': (161, 1), 'Marauder': (161, 3),
@@ -347,7 +362,8 @@ TRAIN_ABILITY = {
     'SiegeTank': (162, 1), 'Thor': (162, 4), 'Hellion': (162, 5),
     'Cyclone': (162, 7), 'WidowMine': (162, 24),
     # Starport
-    'Medivac': (163, 0), 'Raven': (163, 2), 'Battlecruiser': (163, 3),
+    'Medivac': (163, 0), 'Banshee': (163, 1), 'Raven': (163, 2),
+    'Battlecruiser': (163, 3),
     'VikingFighter': (163, 4), 'Liberator': (163, 6),
     # Gateway
     'Zealot': (174, 0), 'Stalker': (174, 1), 'Sentry': (174, 5),
@@ -358,6 +374,12 @@ TRAIN_ABILITY = {
     # Robotics Facility
     'WarpPrism': (176, 0), 'Observer': (176, 1), 'Colossus': (176, 2),
     'Immortal': (176, 3),
+    # Larva
+    'Zergling': (195, 1), 'Overlord': (195, 2), 'Hydralisk': (195, 3),
+    'Mutalisk': (195, 4), 'Ultralisk': (195, 6), 'Roach': (195, 9),
+    'Corruptor': (195, 11),
+    # Hatchery
+    'Queen': (245, 0),
 }
 
 # What each of those ability ids belongs to. Nothing can be ordered from a
@@ -367,7 +389,16 @@ TRAIN_ABILITY = {
 PRODUCER = {
     161: 'Barracks', 162: 'Factory', 163: 'Starport',
     174: 'Gateway', 175: 'Stargate', 176: 'RoboticsFacility',
+    195: 'Hatchery', 245: 'Hatchery',
 }
+
+# Every player starts with one of these already standing, and a starting
+# building is never finished — it has no init and no done event — so it never
+# reaches the finished list. Owning one proves nothing and missing one proves
+# nothing, which makes it useless both as the check that an ability id is still
+# right and as a floor: a 저글링 pressed at 0:30 would otherwise be dragged
+# forward to whenever the second 부화장 went up.
+STARTING = {'Hatchery', 'Nexus', 'CommandCenter'}
 
 # Units whose ability number is not in the table above, so the press cannot be
 # read and the step falls back to subtracting a build time. Naming the building
@@ -1198,7 +1229,8 @@ def train_presses(replay, player, born):
         # The ability says which building it belongs to; if that building was
         # never finished this player cannot have ordered from it, and the id no
         # longer means what the table says. The table time takes over.
-        if producer_of(name) not in owns:
+        made_in = producer_of(name)
+        if made_in not in STARTING and made_in not in owns:
             continue
         cmd = sorted(presses[key])
         # Paired birth by birth rather than all or nothing. A press can be
@@ -1208,15 +1240,38 @@ def train_presses(replay, player, born):
         # table time.
         picked, at = {}, 0
         for birth in sorted(loops):
-            while at < len(cmd) and (cmd[at] >= birth or birth - cmd[at] > MAX_GAP):
+            # Only commands too old to belong to anything are dropped. A command
+            # that sits after this birth belongs to a later one, and skipping it
+            # here used to run the pointer off the end: one early pairing, then
+            # nothing. 광전사 lost sixteen of seventeen presses that way, because
+            # a warp-in arrives thirteen seconds after its press where training
+            # takes twenty-seven, so the two interleave.
+            while at < len(cmd) and birth - cmd[at] > MAX_GAP:
                 at += 1
             if at >= len(cmd):
                 break
+            if cmd[at] >= birth:
+                continue
             # A gap shorter than this is not this birth's press: Chrono Boost
             # caps at +50%, so nothing arrives sooner than that.
             if birth - cmd[at] >= MIN_GAP:
                 picked[birth] = cmd[at]
                 at += 1
+        # Selecting four Gateways and pressing once makes four Zealots off a
+        # single command. Pairing one press to one birth can only speak for the
+        # first of them, and the rest looked pressless and fell back to a table
+        # subtraction — which is most of why units trailed buildings so badly.
+        #
+        # They are recognisable without guessing: units started by one keypress
+        # finish within a moment of each other, where a queue spaces them out by
+        # a whole build time. So a birth with no press of its own takes the
+        # press of a birth it landed beside.
+        for birth in sorted(loops):
+            if birth in picked:
+                continue
+            beside = [b for b in picked if abs(b - birth) <= SAME_PRESS]
+            if beside:
+                picked[birth] = picked[min(beside, key=lambda b: abs(b - birth))]
         if picked:
             out[name] = picked
     return out
@@ -1306,7 +1361,8 @@ def steps_for(replay, player, derived, abilities, extras=None):
         span, source = build_time(name, derived)
         if source == 'unknown' and len(pressed) < len(loops):
             unknown.add(name)
-        floor = finished.get(producer_of(name), 0)
+        made_in = producer_of(name)
+        floor = 0 if made_in in STARTING else finished.get(made_in, 0)
         for loop in loops:
             at = pressed.get(loop)
             steps.append({'loop': at if at is not None else max(floor, loop - span),
