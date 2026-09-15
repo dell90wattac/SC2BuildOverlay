@@ -98,10 +98,11 @@ ADDON_ON = re.compile(r'^(Barracks|Factory|Starport)?(TechLab|Reactor)$')
 # moment rather than a consequence of that lift.
 SWAP_WINDOW = 40 * LOOPS
 
-# How close two births have to be to have come from the same keypress. Units
-# started together finish together; a queue spaces them a build time apart, and
-# the shortest build in the game is nine seconds.
-SAME_PRESS = 1.5 * LOOPS
+# How close two births have to be to count as one keypress. Units started
+# together finish together, within a fraction of a second in the corpus; a queue
+# spaces them by a whole build time, and the shortest trained unit takes
+# seventeen. Two seconds sits far from both.
+SAME_PRESS = 2 * LOOPS
 
 # Chrono Boost only ever targets the caster's own production buildings, and
 # it is used more than once in any real game. That is enough to pick it out
@@ -1263,45 +1264,54 @@ def train_presses(replay, player, born):
         if made_in not in STARTING and made_in not in owns:
             continue
         cmd = sorted(presses[key])
-        # Paired birth by birth rather than all or nothing. A press can be
-        # missing — a unit restarted after a cancel, a command the replay did
-        # not keep — and giving up on the whole unit for one gap throws away
-        # the presses that were there. A birth left without one keeps its
-        # table time.
-        picked, at = {}, 0
+        # Births are matched in groups, not one at a time. One keypress with
+        # several buildings selected makes several units, and a Reactor makes
+        # two off a single command, so a press does not answer for one birth —
+        # it answers for everything that started when it did.
+        #
+        # What started together finishes together: those units share a build
+        # time and a starting instant, and the corpus shows reactor pairs
+        # landing two tenths of a second apart. A queue is the opposite — its
+        # units are spaced by a whole build time, and the shortest trained unit
+        # in the game takes seventeen seconds. So a couple of seconds tells the
+        # two apart with room to spare.
+        #
+        # Matching one press to one birth left the rest of each group looking
+        # pressless: the second 해병 out of a Reactor was compared against the
+        # *next* command, found it closer than MIN_GAP, and was thrown away.
+        groups, current = [], []
         for birth in sorted(loops):
+            if current and birth - current[-1] > SAME_PRESS:
+                groups.append(current)
+                current = []
+            current.append(birth)
+        if current:
+            groups.append(current)
+
+        picked, at = {}, 0
+        for group in groups:
+            first = group[0]
             # Only commands too old to belong to anything are dropped. A command
-            # that sits after this birth belongs to a later one, and skipping it
+            # that sits after this group belongs to a later one, and skipping it
             # here used to run the pointer off the end: one early pairing, then
             # nothing. 광전사 lost sixteen of seventeen presses that way, because
             # a warp-in arrives thirteen seconds after its press where training
             # takes twenty-seven, so the two interleave.
-            while at < len(cmd) and birth - cmd[at] > MAX_GAP:
+            while at < len(cmd) and first - cmd[at] > MAX_GAP:
                 at += 1
             if at >= len(cmd):
                 break
-            if cmd[at] >= birth:
+            if cmd[at] >= first:
                 continue
-            # A gap shorter than this is not this birth's press: Chrono Boost
-            # caps at +50%, so nothing arrives sooner than that.
-            if birth - cmd[at] >= MIN_GAP:
+            # A gap shorter than this is not this group's press: Chrono Boost
+            # caps at +50%, so nothing arrives sooner than that. The command is
+            # left where it is rather than consumed, since it may belong to a
+            # group still to come.
+            if first - cmd[at] < MIN_GAP:
+                continue
+            for birth in group:
                 picked[birth] = cmd[at]
-                at += 1
-        # Selecting four Gateways and pressing once makes four Zealots off a
-        # single command. Pairing one press to one birth can only speak for the
-        # first of them, and the rest looked pressless and fell back to a table
-        # subtraction — which is most of why units trailed buildings so badly.
-        #
-        # They are recognisable without guessing: units started by one keypress
-        # finish within a moment of each other, where a queue spaces them out by
-        # a whole build time. So a birth with no press of its own takes the
-        # press of a birth it landed beside.
-        for birth in sorted(loops):
-            if birth in picked:
-                continue
-            beside = [b for b in picked if abs(b - birth) <= SAME_PRESS]
-            if beside:
-                picked[birth] = picked[min(beside, key=lambda b: abs(b - birth))]
+            at += 1
         if picked:
             out[name] = picked
     return out
