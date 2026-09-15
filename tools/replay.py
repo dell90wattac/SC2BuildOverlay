@@ -91,6 +91,32 @@ MORPHS = {
 # while detached: `StarportTechLab` -> `TechLab` -> `BarracksTechLab` is a Tech
 # Lab moving from the Starport to the Barracks. That is what a swap actually
 # achieves, so that is what gets reported.
+# Units that morph out of another unit. None of them reaches SUnitBornEvent —
+# nothing is born, an existing unit changes — so a Zerg build order was coming
+# out with no 맹독충 in it at all, 441 of them in forty replays.
+#
+# The tracker announces the change twice: the cocoon at the moment the player
+# pressed, and the finished unit when it hatches. 궤멸충 cocoons at 7:05 and
+# arrives at 7:18 against a twelve second morph, so the cocoon is the press —
+# and the press is what a build order is a list of. Filed under what it becomes.
+#
+# A cocoon is not a promise. 맹독충 cocoons turn back into 저글링 seventeen times
+# in those same forty replays, so a step is kept only where the tag really did
+# become what it set out to be.
+#
+# 집정관 is absent on purpose: it arrives as SUnitInitEvent like a building, so
+# it is already read at the moment the merge was ordered. 대군주 수송 is absent
+# too — a per-unit mutation rather than a step, the same call made for 배주머니.
+UNIT_MORPHS = {
+    'BanelingCocoon': 'Baneling',
+    'RavagerCocoon': 'Ravager',
+    'OverlordCocoon': 'Overseer',
+    'LurkerMPEgg': 'LurkerMP',
+    # Nobody built one across 104 replays. The name is the game's own, read off
+    # the balance data rather than guessed, and it lies idle until one turns up.
+    'BroodLordCocoon': 'BroodLord',
+}
+
 ADDON_ON = re.compile(r'^(Barracks|Factory|Starport)?(TechLab|Reactor)$')
 
 # A lift and a landing this far apart are one swap. Beyond it the add-on
@@ -704,6 +730,28 @@ def morph_steps(replay, player, owner):
         seen.add((tag, name))
         out.append({'loop': event['_gameloop'], 'name': name,
                     'kind': 'morph', 'source': 'event'})
+    return out
+
+
+def unit_morph_steps(replay, player, owner):
+    """Units that became another unit, timed at the cocoon rather than the
+    hatch, and only where the cocoon actually finished."""
+    started, out = {}, []
+    for event in replay.tracker:
+        if not event['_event'].endswith('SUnitTypeChangeEvent'):
+            continue
+        tag = event['m_unitTagIndex']
+        if owner.get(tag) != player['id']:
+            continue
+        name = txt(event['m_unitTypeName'])
+        becomes = UNIT_MORPHS.get(name)
+        if becomes:
+            started[tag] = (event['_gameloop'], becomes)
+            continue
+        waiting = started.pop(tag, None)
+        if waiting and waiting[1] == name:
+            out.append({'loop': waiting[0], 'name': name,
+                        'kind': 'morph', 'source': 'event'})
     return out
 
 
@@ -1362,6 +1410,7 @@ def steps_for(replay, player, derived, abilities, extras=None):
     finished = first_finished(replay, player)
     presses = research_presses(replay, player, abilities)
     steps += morph_steps(replay, player, owner)
+    steps += unit_morph_steps(replay, player, owner)
     if 'swap' in extras:
         steps += swap_steps(replay, player, owner)
     if 'mule' in extras:
