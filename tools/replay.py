@@ -345,6 +345,32 @@ PRODUCER = {
     174: 'Gateway', 175: 'Stargate', 176: 'RoboticsFacility',
 }
 
+# Units whose ability number is not in the table above, so the press cannot be
+# read and the step falls back to subtracting a build time. Naming the building
+# they come out of at least holds that subtraction to the moment the building
+# existed: Chrono Boost shortens the real build but not the table, so without a
+# floor a boosted 모선 lands thirty seconds before the 연결체 that made it.
+#
+# 집정관 is a merge rather than a unit that is trained, but both templars come
+# out of a Gateway, so that is still the earliest it can have happened.
+TRAINED_AT = {
+    'Mothership': 'Nexus',
+    'Carrier': 'Stargate',
+    'HighTemplar': 'Gateway',
+    'DarkTemplar': 'Gateway',
+    'Disruptor': 'RoboticsFacility',
+    'Archon': 'Gateway',
+}
+
+
+def producer_of(name):
+    """The building a unit is made in — by ability id where that is known."""
+    key = TRAIN_ABILITY.get(name)
+    if key:
+        return PRODUCER.get(key[0])
+    return TRAINED_AT.get(name)
+
+
 # The tracker spells some upgrades entirely in lower case —
 # `zerglingmovementspeed` beside `ZerglingAttackSpeed` in the same replay — and
 # which ones it does that to is not a list worth keeping twice.
@@ -1250,7 +1276,7 @@ def steps_for(replay, player, derived, abilities, extras=None):
         span, source = build_time(name, derived)
         if source == 'unknown' and len(pressed) < len(loops):
             unknown.add(name)
-        floor = finished.get(PRODUCER.get((TRAIN_ABILITY.get(name) or (None,))[0]), 0)
+        floor = finished.get(producer_of(name), 0)
         for loop in loops:
             at = pressed.get(loop)
             steps.append({'loop': at if at is not None else max(floor, loop - span),
