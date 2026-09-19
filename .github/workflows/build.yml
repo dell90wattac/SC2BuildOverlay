@@ -1,0 +1,49 @@
+name: Build Windows installer
+
+# Release artifacts are not copied when a repository is forked, so this builds
+# them here. It runs on a real Windows runner rather than cross-building, which
+# is what NSIS wants.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # electron-builder reads the `build` block in package.json: an NSIS
+      # installer and a portable .exe, both x64.
+      - name: Build
+        run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # So a manual run still hands you an .exe without needing a tag.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            dist/*.exe
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        # bash, not the runner's default PowerShell: gh does not expand the
+        # glob itself, and PowerShell does not expand it for an external command.
+        shell: bash
+        run: gh release create "${{ github.ref_name }}" dist/*.exe --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
