@@ -15,7 +15,7 @@
    rem so a single font-size on :root scales the whole overlay. */
 :root {
   font-size: 15px;
-  /* Set from the 단계 글자 setting. Declared here so the stylesheet renders on
+  /* Set from the Step text setting. Declared here so the stylesheet renders on
      its own, outside the app, at the size it ships with. */
   --step-scale: 1;
 
@@ -23,7 +23,7 @@
      written as an offset from --hud-h, so one number rotates the whole frame
      and the hand-picked depth between the parts survives the rotation.
      --hud-sat drops to near zero for the neutral theme.
-     Set from the 테마 색 setting; the defaults are the original blue. */
+     Set from the Theme colour setting; the defaults are the original blue. */
   --hud-h: 207;
   --hud-sat: 1;
 
@@ -114,7 +114,7 @@ body {
    Opaque rather than glass. The old panel blurred the game behind it, which
    cost a composited layer, a `backdrop-filter` that Chromium clips to the
    square border box instead of the shape, and a tint that changed with the
-   map. A HUD reads better solid, and 불투명도 still thins the whole panel. */
+   map. A HUD reads better solid, and Opacity still thins the whole panel. */
 .panel::after {
   content: '';
   position: absolute;
@@ -352,12 +352,12 @@ body.no-footer .footer {
   gap: 0.38rem;
 }
 
-/* The step list carries a second size axis on top of the panel-wide 크기: the
+/* The step list carries a second size axis on top of the panel-wide Size: the
    build order is the thing being read mid-game, so it can be enlarged without
    the header, the footer and the window growing with it.
 
    Columns, gap and row padding scale with it, or bigger digits would spill out
-   of a fixed 시간 column. They scale off `--step-scale` directly rather than
+   of a fixed Time column. They scale off `--step-scale` directly rather than
    off each row's own font-size: `.step.next` is set in a larger type, and
    em-based columns would make that one row's grid wider than the rest and break
    the alignment the list is read by. */
@@ -481,7 +481,7 @@ body.no-footer .footer {
   border-radius: 2px;
 }
 
-/* The pictures stay on the 아이콘 setting rather than following 단계 글자: they
+/* The pictures stay on the Icons setting rather than following Step text: they
    are art, not type, and their column width is the one the main process adds to
    the window (`ICON_COLUMN`). Scaling them here would put the two out of step. */
 body.icons-small .step {

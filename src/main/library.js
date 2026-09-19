@@ -68,7 +68,7 @@ class Library extends EventEmitter {
       if (holder) {
         b.problems.push({
           line: 0,
-          message: `slot ${b.declaredSlot} 은 ${holder.source} 가 이미 쓰고 있어 자동 배정으로 넘깁니다.`,
+          message: `Slot ${b.declaredSlot} is already taken by ${holder.source}; falling back to auto-assignment.`,
         });
         continue;
       }

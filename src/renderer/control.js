@@ -75,7 +75,7 @@ const el = {
   quit: $('quit'),
 };
 
-const RACE_LABEL = { T: '테란', Z: '저그', P: '프로토스', R: '랜덤', '*': '아무 종족' };
+const RACE_LABEL = { T: 'Terran', Z: 'Zerg', P: 'Protoss', R: 'Random', '*': 'Any race' };
 
 function formatTime(seconds) {
   const s = Math.max(0, Math.floor(seconds));
@@ -96,25 +96,25 @@ function renderRun(view) {
 
   el.runDot.classList.toggle('on', running);
   el.runDot.classList.toggle('waiting', !running && Boolean(view.watching));
-  el.runLabel.textContent = running ? '실행 중' : view.watching ? '대기 중' : '정지됨';
+  el.runLabel.textContent = running ? 'Running' : view.watching ? 'Waiting' : 'Stopped';
   el.runDetail.textContent = !running
     ? view.watching
-      ? '게임이 시작되면 자동으로 시작합니다'
-      : '시작을 누르면 SC2 를 읽습니다'
+      ? 'Starts by itself once a game begins'
+      : 'Press Start to read SC2'
     : mock
-      ? '가짜 시계 · SC2 안 읽음'
-      : 'SC2 를 250ms 마다 읽는 중';
-  el.runToggle.textContent = running ? '■ 정지' : '▶ 시작';
+      ? 'Fake clock · not reading SC2'
+      : 'Reading SC2 every 250ms';
+  el.runToggle.textContent = running ? '■ Stop' : '▶ Start';
   el.runToggle.classList.toggle('running', running);
   el.mockBanner.hidden = !mock;
 
   el.sClient.textContent = !running
     ? '—'
     : mock
-      ? '읽지 않음 · 가짜'
+      ? 'Not reading · fake'
       : game.connected
-        ? '연결됨 · localhost:6119'
-        : '대기 중 · SC2 미실행';
+        ? 'Connected · localhost:6119'
+        : 'Waiting · SC2 not running';
   el.sClient.classList.toggle('live', running && !mock && game.connected);
   el.sClient.classList.toggle('mock', running && mock);
 
@@ -122,12 +122,12 @@ function renderRun(view) {
     el.sGame.textContent = '—';
     el.sClock.textContent = '—';
   } else if (game.inGame) {
-    const me = game.me ? `${game.me.name} (${RACE_LABEL[game.me.race] || '?'})` : '미확인';
-    const opp = game.opponent ? `${game.opponent.name} (${RACE_LABEL[game.opponent.race] || '?'})` : '미확인';
-    el.sGame.textContent = mock ? `가짜: ${me} vs ${opp}` : `${me} vs ${opp}`;
-    el.sClock.textContent = `${formatTime(game.displayTime)}${mock ? '  · 가짜' : ''}${game.isReplay ? '  리플레이' : ''}`;
+    const me = game.me ? `${game.me.name} (${RACE_LABEL[game.me.race] || '?'})` : 'unknown';
+    const opp = game.opponent ? `${game.opponent.name} (${RACE_LABEL[game.opponent.race] || '?'})` : 'unknown';
+    el.sGame.textContent = mock ? `Fake: ${me} vs ${opp}` : `${me} vs ${opp}`;
+    el.sClock.textContent = `${formatTime(game.displayTime)}${mock ? '  · fake' : ''}${game.isReplay ? '  replay' : ''}`;
   } else {
-    el.sGame.textContent = '게임 대기 중';
+    el.sGame.textContent = 'Waiting for a game';
     el.sClock.textContent = '—';
   }
   el.sGame.classList.toggle('live', running && !mock && Boolean(game.inGame));
@@ -139,13 +139,13 @@ function renderRun(view) {
   el.sNext.textContent = !running
     ? '—'
     : noMatch && noMatch.unknownPlayer
-      ? '내 플레이어 미확인 — 아래에 이름 입력'
+      ? "Can't tell which player is you — enter your name below"
       : noMatch
-      ? `${noMatch.race || '?'}v${noMatch.vs || '?'} 빌드가 없습니다`
+      ? `No ${noMatch.race || '?'}v${noMatch.vs || '?'} build`
       : step
         ? `${formatTime(step.at)}  ${step.supply ? `@${step.supply}  ` : ''}${step.action}`
         : view.totalSteps
-          ? '빌드 끝'
+          ? 'End of build'
           : '—';
   el.sNext.classList.toggle('warn-text', Boolean(noMatch));
 }
@@ -169,7 +169,7 @@ function renderBuilds(view) {
     const fav = favs.includes(b.source);
     star.classList.toggle('on', fav);
     star.textContent = fav ? '★' : '☆';
-    star.title = fav ? '즐겨찾기 해제' : '이 매치업의 기본으로';
+    star.title = fav ? 'Remove from favourites' : 'Make this the default for the matchup';
     star.addEventListener('click', () => window.control.toggleFavorite(b.source));
 
     const item = document.createElement('button');
@@ -191,8 +191,8 @@ function renderBuilds(view) {
     const matchup = `${b.race || '?'}v${b.vs === '*' ? 'X' : b.vs || 'X'}`;
     meta.textContent =
       b.source === pinned
-        ? '고정 — 눌러서 해제'
-        : `${matchup} · ${b.steps}단계${b.problems ? ` · ⚠${b.problems}` : ''}`;
+        ? 'Pinned — click to release'
+        : `${matchup} · ${b.steps} steps${b.problems ? ` · ⚠${b.problems}` : ''}`;
 
     item.append(slot, name, meta);
     // Clicking the pinned build again releases it back to auto-pick.
@@ -206,7 +206,7 @@ function renderBuilds(view) {
 
   const broken = view.builds.filter((b) => b.problems);
   el.buildProblems.textContent = broken.length
-    ? `읽지 못한 줄이 있는 파일: ${broken.map((b) => b.name).join(', ')} — 편집기에서 확인하세요.`
+    ? `Files with lines that could not be read: ${broken.map((b) => b.name).join(', ')} — check them in the editor.`
     : '';
 }
 
@@ -215,9 +215,9 @@ function renderOverlayControls(view) {
 
   // Showing, hiding, locking and moving the overlay all work while stopped —
   // that is the state you set it up in.
-  el.toggleVisible.textContent = ui.visible ? '숨기기' : '표시';
+  el.toggleVisible.textContent = ui.visible ? 'Hide' : 'Show';
   el.toggleLocked.disabled = !ui.visible;
-  el.toggleLocked.textContent = ui.locked ? '잠금 해제' : '잠그기';
+  el.toggleLocked.textContent = ui.locked ? 'Unlock' : 'Lock';
 
   el.modeAuto.classList.toggle('on', ui.mode === 'auto');
   el.modeManual.classList.toggle('on', ui.mode === 'manual');
@@ -243,18 +243,18 @@ function renderPlayersHint(view) {
   el2.classList.toggle('live', Boolean(running && game.inGame && players.length));
 
   if (!running || !game.inGame || players.length === 0) {
-    el2.textContent = '게임에 들어가면 SC2 가 알려주는 이름이 여기 표시됩니다.';
+    el2.textContent = 'Once you are in a game, the names SC2 reports show up here.';
     return;
   }
 
   const typed = String(settings.myName || '').trim().toLowerCase();
-  el2.replaceChildren(document.createTextNode('이 게임의 플레이어: '));
+  el2.replaceChildren(document.createTextNode('Players in this game: '));
 
   players.forEach((p, i) => {
     if (i > 0) el2.append(document.createTextNode(' · '));
     const who = document.createElement('span');
     who.className = 'who';
-    const name = p.name || '(이름 없음)';
+    const name = p.name || '(no name)';
     if (typed && name.toLowerCase() === typed) who.classList.add('matched');
     who.textContent = name;
     el2.append(who);
@@ -264,7 +264,7 @@ function renderPlayersHint(view) {
   const humans = players.filter((p) => p.type === 'user').length;
   el2.append(
     document.createTextNode(
-      matched ? ' — 인식됨' : humans <= 1 ? ' — 자동 구분됨' : ' — 내 쪽을 위에 입력'
+      matched ? ' — recognised' : humans <= 1 ? ' — worked out automatically' : ' — type your own name above'
     )
   );
 }
@@ -273,7 +273,7 @@ function renderSettings(view) {
   const { settings } = view;
 
   if (!busy(el.lead)) el.lead.value = settings.leadSeconds;
-  el.leadValue.textContent = `${settings.leadSeconds}초`;
+  el.leadValue.textContent = `${settings.leadSeconds}s`;
 
   const hue = settings.themeHue ?? 207;
   const sat = settings.themeSat ?? 1;
@@ -288,7 +288,7 @@ function renderSettings(view) {
   el.iconsNone.classList.toggle('on', iconMode === 'none');
   el.iconsSmall.classList.toggle('on', iconMode === 'small');
   el.iconsLarge.classList.toggle('on', iconMode === 'large');
-  // Nothing to explain while it works — 없음/작게/크게 says it. But an icon
+  // Nothing to explain while it works — None/Small/Large says it. But an icon
   // folder that failed to load would leave the option looking simply broken.
   const iconsMissing = settings.iconsAvailable === false;
   const iconsShort = Number(settings.iconsShort) || 0;
@@ -298,9 +298,9 @@ function renderSettings(view) {
 
   el.iconsHint.hidden = !anyToFetch || fetching;
   el.iconsHint.textContent = iconsMissing
-    ? '그림 파일이 아직 없습니다. 아래에서 내려받으면 단계 옆에 표시됩니다.'
+    ? 'No picture files yet. Download them below and they appear beside each step.'
     : iconsShort
-      ? `이번 판올림에서 늘어난 그림 ${iconsShort}개가 아직 없습니다. 내려받으면 채워집니다.`
+      ? `${iconsShort} pictures added in this release are still missing. Downloading fills them in.`
       : '';
   // Only an empty set is a warning. A couple of new pictures is an errand.
   el.iconsHint.classList.toggle('warn', iconsMissing && !fetching);
@@ -310,7 +310,7 @@ function renderSettings(view) {
   // adds a term adds a picture nobody has yet, which is also something to do.
   el.iconsFetchRow.hidden = !anyToFetch && !fetching && !(fetch && fetch.message);
   el.iconsFetch.disabled = fetching;
-  el.iconsFetch.textContent = fetching ? '받는 중…' : '그림 내려받기';
+  el.iconsFetch.textContent = fetching ? 'Downloading…' : 'Download pictures';
   el.iconsFetchState.textContent = fetching
     ? `${fetch.done} / ${fetch.total || '…'}`
     : (fetch && fetch.message) || '';
@@ -330,7 +330,7 @@ function renderSettings(view) {
   el.stepScaleValue.textContent = `${Math.round(settings.stepScale * 100)}%`;
 
   // The multiplier on its own says nothing about how much text now fits, and
-  // 크기 and 아이콘 feed into the same number — so report the pixels it lands on.
+  // Size and Icons feed into the same number — so report the pixels it lands on.
   if (!busy(el.widthScale)) el.widthScale.value = settings.widthScale;
   el.widthScaleValue.textContent =
     `${Math.round(settings.widthScale * 100)}% · ${settings.overlayWidth}px`;
@@ -348,7 +348,7 @@ function renderSettings(view) {
   const custom = settings.soundFile;
   el.soundFile.textContent = custom
     ? (custom.length > 28 ? `…${custom.slice(-27)}` : custom)
-    : '기본 내장음';
+    : 'Built-in default';
   el.soundFile.title = custom || '';
   el.soundDefault.disabled = !custom;
 
@@ -399,27 +399,28 @@ el.showFooter.addEventListener('click', () =>
 /**
  * The frame hues on offer.
  *
- * Warm angles are missing on purpose. 4° (임박), 40° (지금 할 줄) and 134°
- * (여유) already mean something in the overlay, and a frame sitting on one of
- * them swallows the band that means it — a green frame hides `여유` with no
- * error to see. Every hue here clears all three, and they clear each other.
+ * Warm angles are missing on purpose. 4° (due now), 40° (the row to do) and
+ * 134° (time to spare) already mean something in the overlay, and a frame
+ * sitting on one of them swallows the band that means it — a green frame hides
+ * `time to spare` with no error to see. Every hue here clears all three, and
+ * they clear each other.
  *
- * 회색 is the same idea with the colour taken out rather than moved.
+ * Grey is the same idea with the colour taken out rather than moved.
  */
 const THEMES = [
-  { name: '청록', hue: 175, sat: 1 },
-  { name: '하늘', hue: 193, sat: 1 },
-  { name: '청색', hue: 207, sat: 1 },
-  { name: '남색', hue: 230, sat: 1 },
-  { name: '남보라', hue: 255, sat: 1 },
-  { name: '보라', hue: 282, sat: 1 },
-  { name: '자홍', hue: 310, sat: 1 },
+  { name: 'Teal', hue: 175, sat: 1 },
+  { name: 'Sky', hue: 193, sat: 1 },
+  { name: 'Blue', hue: 207, sat: 1 },
+  { name: 'Indigo', hue: 230, sat: 1 },
+  { name: 'Violet', hue: 255, sat: 1 },
+  { name: 'Purple', hue: 282, sat: 1 },
+  { name: 'Magenta', hue: 310, sat: 1 },
   // The warm half is only reachable with the colour turned down. At full
   // saturation a tan frame is the gold row's own hue and swallows it; muted,
   // the contrast moves from hue to saturation and the gold still lands first.
-  { name: '모래', hue: 35, sat: 0.35 },
-  { name: '올리브', hue: 85, sat: 0.35 },
-  { name: '회색', hue: 210, sat: 0.12 },
+  { name: 'Sand', hue: 35, sat: 0.35 },
+  { name: 'Olive', hue: 85, sat: 0.35 },
+  { name: 'Grey', hue: 210, sat: 0.12 },
 ];
 
 for (const theme of THEMES) {

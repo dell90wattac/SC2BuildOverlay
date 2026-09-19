@@ -68,7 +68,7 @@ function createConfig(file) {
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, JSON.stringify(data, null, 2));
     } catch (err) {
-      console.warn('설정을 저장하지 못했습니다:', err.message);
+      console.warn('Could not save settings:', err.message);
     }
   };
 

@@ -3,8 +3,9 @@
 /**
  * Suggests the words that put a picture next to a step.
  *
- * Typing `수정탑` in a step's 행동 is what makes the 수정탑 icon appear on the
- * overlay — the match happens on the text, with no separate picture to choose.
+ * Typing a term in a step's Action field is what makes that term's icon appear
+ * on the overlay — the match happens on the text, with no separate picture to
+ * choose.
  * That is convenient once you know the vocabulary and invisible until then, so
  * the editor offers the vocabulary while you type, with the picture beside each
  * name so the thing you are choosing is the thing you will see.
@@ -14,15 +15,16 @@
  */
 
 /**
- * What separates one thing from the next inside a step: `보급고 → 병영`,
- * `해병/불곰`, `추출장, 대군주`. Text after the last of these is the thing being
- * named, and the only part a suggestion may replace.
+ * What separates one thing from the next inside a step: `Supply Depot →
+ * Barracks`, `Marine/Marauder`, `Extractor, Overlord`. Text after the last of
+ * these is the thing being named, and the only part a suggestion may replace.
  *
  * A space is deliberately *not* one of them. 61% of the vocabulary has a space
- * in it (`지상 무기 1단계`, `공학 연구소`, `병영 기술실`), and stopping at the
- * space meant the suggestion vanished the moment you typed past it — `지상`
- * offered the upgrade, `지상 무` offered 무기고, and the term you were halfway
- * through typing became unreachable.
+ * in it (`Ground Weapons Level 1`, `Engineering Bay`, `Barracks Tech Lab`), and
+ * stopping at the space meant the suggestion vanished the moment you typed past
+ * it: the first word offered the upgrade, the first word plus one letter offered
+ * something else entirely, and the term you were halfway through typing became
+ * unreachable.
  */
 const HARD = /[,/+·→>()[\]]/;
 
@@ -66,8 +68,9 @@ function ensureBox() {
  * What the caret could be in the middle of naming, longest first.
  *
  * Since a space no longer ends a fragment, the text back to the last hard
- * separator can hold more than one thing: in `앞마당 병영` the whole run matches
- * nothing but its last word matches 병영. So the run is offered whole, then with
+ * separator can hold more than one thing: in `natural Barracks` the whole run
+ * matches nothing but its last word matches `Barracks`. So the run is offered
+ * whole, then with
  * its leading words dropped one at a time, and the caller takes the first
  * candidate that finds anything — the most specific reading that works.
  */
@@ -97,16 +100,18 @@ function fragmentsOf(el) {
  * Names worth offering for `fragment`, best first.
  *
  * Ranked by where the fragment lands rather than by the term's own length: with
- * `무기` there are 17 candidates and only eight places, and sorting by length
- * pushed `지상 무기 1단계` to ninth — outside the list — while three levels of
- * 공중 무기 took its place. Position puts every prefix match first, and length
+ * `Weapons` there are 17 candidates and only eight places, and sorting by length
+ * pushed `Ground Weapons Level 1` to ninth — outside the list — while three
+ * levels of air weapons took its place. Position puts every prefix match first,
+ * and length
  * only breaks the ties that are left.
  */
 function matches(fragment) {
   if (!fragment) return [];
-  /* One character is too little to search inside names with: `병` appears in
-     해병, 화염기갑병 and 보병 무기 1단계, none of which is what someone typing
-     it is reaching for. Prefix only until there are two to go on. */
+  /* One character is too little to search inside names with: it turns up in the
+     middle of half a dozen unrelated unit and upgrade names, none of which is
+     what someone typing it is reaching for. Prefix only until there are two
+     characters to go on. */
   const inside = fragment.length >= 2;
 
   const found = [];
@@ -120,8 +125,8 @@ function matches(fragment) {
   );
   /* The name typed exactly stays in the list like any other. Dropping it meant
      the popup closed the moment a term was complete — and it closes on a typo
-     too, so `제련소` and `제련솧` looked identical while one draws a picture and
-     the other does not. Its presence is the confirmation that the word works. */
+     too, so a correctly spelled name and a typo of it looked identical while one
+     draws a picture and the other does not. Its presence is the confirmation that the word works. */
   return found.slice(0, MAX_SHOWN).map(({ t }) => t);
 }
 
@@ -220,7 +225,7 @@ function update() {
 }
 
 /**
- * Wires one 행동 field.
+ * Wires one Action field.
  *
  * @param el the input
  * @param onChange called after a suggestion is inserted, so the row can read

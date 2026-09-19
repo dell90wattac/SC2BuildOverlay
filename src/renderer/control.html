@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>SC2 Build Overlay</title>
@@ -10,235 +10,237 @@
       <div class="run-state">
         <span id="run-dot" class="dot"></span>
         <div>
-          <strong id="run-label">정지됨</strong>
-          <span id="run-detail" class="muted small">시작을 누르면 SC2 를 읽습니다</span>
+          <strong id="run-label">Stopped</strong>
+          <span id="run-detail" class="muted small">Press Start to read SC2</span>
         </div>
       </div>
-      <button id="run-toggle" type="button" class="primary big">▶ 시작</button>
+      <button id="run-toggle" type="button" class="primary big">▶ Start</button>
     </header>
 
     <main class="body">
       <p id="mock-banner" class="mock-banner" hidden>
-        <strong>MOCK 모드</strong> — 가짜 데이터. 실제 사용은 <code>npm start</code>
+        <strong>MOCK mode</strong> — fake data. For real use, <code>npm start</code>
       </p>
 
       <section class="card">
-        <h2>상태</h2>
+        <h2>Status</h2>
         <dl class="status-grid">
-          <dt>SC2 클라이언트</dt>
+          <dt>SC2 client</dt>
           <dd id="s-client">—</dd>
-          <dt>게임</dt>
+          <dt>Game</dt>
           <dd id="s-game">—</dd>
-          <dt>시계</dt>
+          <dt>Clock</dt>
           <dd id="s-clock">—</dd>
-          <dt>다음 단계</dt>
+          <dt>Next step</dt>
           <dd id="s-next">—</dd>
         </dl>
       </section>
 
       <section class="card">
         <div class="card-head">
-          <h2>빌드</h2>
+          <h2>Builds</h2>
           <div class="head-actions">
-            <button id="reload" type="button">다시 읽기</button>
-            <button id="open-editor" type="button">편집기…</button>
+            <button id="reload" type="button">Reload</button>
+            <button id="open-editor" type="button">Editor…</button>
           </div>
         </div>
         <ul id="build-list" class="build-list"></ul>
         <p id="build-empty" class="muted small">
-          빌드가 없습니다. <strong>편집기…</strong> 로 만드세요.
+          No builds yet. Make one with <strong>Editor…</strong>.
         </p>
         <label class="check">
           <input id="auto-pick" type="checkbox" />
-          <span>종족 매치업으로 자동 선택 (★ 우선)</span>
+          <span>Pick automatically by race matchup (★ first)</span>
         </label>
         <p id="build-problems" class="warn"></p>
       </section>
 
       <section class="card">
         <div class="card-head">
-          <h2>오버레이</h2>
+          <h2>Overlay</h2>
           <div class="head-actions">
-            <button id="toggle-visible" type="button" disabled>숨기기</button>
-            <button id="toggle-locked" type="button" disabled>잠금 해제</button>
+            <button id="toggle-visible" type="button" disabled>Hide</button>
+            <button id="toggle-locked" type="button" disabled>Unlock</button>
           </div>
         </div>
 
         <div class="mode-row">
-          <span class="muted small">진행 방식</span>
+          <span class="muted small">Advance</span>
           <div class="segmented">
-            <button id="mode-auto" type="button" class="seg">자동 (시계)</button>
-            <button id="mode-manual" type="button" class="seg">수동 (핫키)</button>
+            <button id="mode-auto" type="button" class="seg">Auto (clock)</button>
+            <button id="mode-manual" type="button" class="seg">Manual (hotkeys)</button>
           </div>
         </div>
         <p class="muted small">
-          수동은 <code>Ctrl+Alt+←/→</code> 로 넘깁니다.
+          Manual advances with <code>Ctrl+Alt+←/→</code>.
         </p>
 
         <label class="field">
-          <span>미리 알림 <em id="lead-value">0초</em></span>
+          <span>Lead time <em id="lead-value">0s</em></span>
           <input id="lead" type="range" min="0" max="15" step="1" />
         </label>
         <div class="mode-row">
-          <span class="muted small">아이콘</span>
+          <span class="muted small">Icons</span>
           <div class="segmented">
-            <button id="icons-none" type="button" class="seg">없음</button>
-            <button id="icons-small" type="button" class="seg">작게</button>
-            <button id="icons-large" type="button" class="seg">크게</button>
+            <button id="icons-none" type="button" class="seg">None</button>
+            <button id="icons-small" type="button" class="seg">Small</button>
+            <button id="icons-large" type="button" class="seg">Large</button>
           </div>
         </div>
         <p id="icons-hint" class="muted small">
-          단계 옆에 유닛·건물 그림을 함께 보여줍니다.
+          Shows unit and building pictures beside each step.
         </p>
         <div id="icons-fetch-row" class="field" hidden>
-          <span>그림 파일 <em id="icons-fetch-state"></em></span>
-          <button id="icons-fetch" type="button">그림 내려받기</button>
+          <span>Picture files <em id="icons-fetch-state"></em></span>
+          <button id="icons-fetch" type="button">Download pictures</button>
         </div>
 
         <div class="mode-row">
-          <span class="muted small">테마 색</span>
+          <span class="muted small">Theme colour</span>
           <div id="theme-swatches" class="swatches"></div>
         </div>
         <label class="check">
           <input id="gauge" type="checkbox" />
-          <span>남은 시간 게이지 표시</span>
+          <span>Show time-remaining gauge</span>
         </label>
         <p class="muted small">
-          현재 진행 중인 단계에 10초 전부터 줄어드는 애니메이션을 보여줍니다.
+          Draws a bar on the step in progress that drains over its last 10 seconds.
         </p>
 
         <div class="mode-row">
-          <span class="muted small">표시</span>
+          <span class="muted small">Show</span>
           <div class="segmented">
-            <button id="show-header" type="button" class="seg">머리말</button>
-            <button id="show-footer" type="button" class="seg">꼬리말</button>
+            <button id="show-header" type="button" class="seg">Header</button>
+            <button id="show-footer" type="button" class="seg">Footer</button>
           </div>
         </div>
         <p class="muted small">
-          빌드 이름·시계(머리말)와 상태·힌트(꼬리말)를 감춥니다. 끄면 창이
-          그만큼 작아집니다. 머리말은 창을 끌어 옮기는 손잡이라, 잠금을 풀면
-          잠시 다시 나타납니다.
+          Hides the build name and clock (header) and the status and hint (footer).
+          Turning one off makes the window that much smaller. The header is the
+          handle you drag the window by, so it comes back for a moment whenever
+          you unlock.
         </p>
 
         <label class="field">
-          <span>불투명도 <em id="opacity-value">90%</em></span>
+          <span>Opacity <em id="opacity-value">90%</em></span>
           <input id="opacity" type="range" min="0.3" max="1" step="0.05" />
         </label>
         <label class="field">
-          <span>크기 <em id="scale-value">100%</em></span>
+          <span>Size <em id="scale-value">100%</em></span>
           <input id="scale" type="range" min="0.7" max="1.6" step="0.05" />
         </label>
         <label class="field">
-          <span>단계 글자 <em id="step-scale-value">100%</em></span>
+          <span>Step text <em id="step-scale-value">100%</em></span>
           <input id="step-scale" type="range" min="0.8" max="1.8" step="0.05" />
         </label>
         <label class="field">
-          <span>가로 폭 <em id="width-scale-value">100%</em></span>
+          <span>Width <em id="width-scale-value">100%</em></span>
           <input id="width-scale" type="range" min="0.7" max="1.8" step="0.05" />
         </label>
         <p class="muted small">
-          <strong>크기</strong> 는 창 전체를, <strong>단계 글자</strong> 는 빌드 목록만
-          키웁니다. 목록만 키우면 창 폭은 그대로라 긴 단계가 <code>…</code> 로 잘리니,
-          그때 <strong>가로 폭</strong> 으로 넓히세요.
+          <strong>Size</strong> grows the whole window; <strong>Step text</strong>
+          grows only the build list. Growing just the list leaves the window as wide
+          as it was, so long steps get cut off with <code>…</code> — widen it with
+          <strong>Width</strong> when that happens.
         </p>
         <div class="two">
           <label class="field">
-            <span>지난 단계 표시</span>
+            <span>Past steps shown</span>
             <input id="lookbehind" type="number" min="0" max="5" step="1" />
           </label>
           <label class="field">
-            <span>다음 단계 표시</span>
+            <span>Upcoming steps shown</span>
             <input id="lookahead" type="number" min="1" max="15" step="1" />
           </label>
         </div>
 
         <div class="field">
-          <span>위치</span>
+          <span>Position</span>
           <div class="corners">
-            <button id="pos-tl" type="button" disabled>↖ 좌상</button>
-            <button id="pos-tr" type="button" disabled>↗ 우상</button>
-            <button id="pos-bl" type="button" disabled>↙ 좌하</button>
-            <button id="pos-br" type="button" disabled>↘ 우하</button>
+            <button id="pos-tl" type="button" disabled>↖ Top left</button>
+            <button id="pos-tr" type="button" disabled>↗ Top right</button>
+            <button id="pos-bl" type="button" disabled>↙ Bottom left</button>
+            <button id="pos-br" type="button" disabled>↘ Bottom right</button>
           </div>
         </div>
         <p class="muted small">
-          직접 끌려면 <code>Ctrl+Alt+L</code> 로 잠금 해제 후 헤더를 드래그.
+          To place it by hand, unlock with <code>Ctrl+Alt+L</code> and drag the header.
         </p>
       </section>
 
       <section class="card">
         <div class="card-head">
-          <h2>효과음</h2>
-          <button id="test-sound" type="button">소리 확인</button>
+          <h2>Sound</h2>
+          <button id="test-sound" type="button">Test sound</button>
         </div>
         <label class="check">
           <input id="sound-enabled" type="checkbox" />
-          <span>단계가 넘어갈 때 소리로 알림</span>
+          <span>Play a sound when the step advances</span>
         </label>
         <label class="field">
-          <span>볼륨 <em id="sound-volume-value">50%</em></span>
+          <span>Volume <em id="sound-volume-value">50%</em></span>
           <input id="sound-volume" type="range" min="0" max="1" step="0.05" />
         </label>
 
         <div class="field">
-          <span>소리 <em id="sound-file">기본 내장음</em></span>
+          <span>Sound <em id="sound-file">Built-in default</em></span>
           <div class="corners">
-            <button id="sound-pick" type="button">불러오기…</button>
-            <button id="sound-default" type="button" disabled>기본음으로</button>
+            <button id="sound-pick" type="button">Load…</button>
+            <button id="sound-default" type="button" disabled>Use default</button>
           </div>
         </div>
         <p id="sound-problem" class="warn"></p>
 
         <p class="muted small">
-          자동 모드에서 단계가 넘어갈 때만 울립니다. 짧은 소리가 좋습니다 —
-          WAV · MP3 · OGG · M4A · FLAC, 5MB 까지.
+          It only fires in auto mode, when the step advances. Short sounds work best —
+          WAV · MP3 · OGG · M4A · FLAC, up to 5MB.
         </p>
       </section>
 
       <section class="card">
-        <h2>설정</h2>
+        <h2>Settings</h2>
         <label class="field">
-          <span>내 플레이어 이름</span>
-          <input id="my-name" type="text" placeholder="아래에 표시된 이름을 그대로" />
+          <span>My player name</span>
+          <input id="my-name" type="text" placeholder="Exactly as shown below" />
         </label>
         <p id="players-hint" class="players-hint">
-          게임에 들어가면 SC2 가 알려주는 플레이어 이름이 여기 표시됩니다.
+          Once you are in a game, the player names SC2 reports show up here.
         </p>
-        <p class="muted small">매치업 자동 선택용.</p>
+        <p class="muted small">Used for matchup auto-pick.</p>
         <label class="check">
           <input id="auto-start-game" type="checkbox" />
-          <span>게임이 시작되면 자동으로 시작</span>
+          <span>Start automatically when a game begins</span>
         </label>
         <label class="check">
           <input id="auto-start" type="checkbox" />
-          <span>앱을 열면 바로 시작</span>
+          <span>Start as soon as the app opens</span>
         </label>
       </section>
 
       <section class="card">
         <details class="keys-panel">
-          <summary>핫키</summary>
+          <summary>Hotkeys</summary>
           <ul class="keys">
-            <li><kbd>Ctrl+Alt+S</kbd><span>시작 / 정지</span></li>
-            <li><kbd>Ctrl+Alt+1~9</kbd><span>슬롯 빌드 불러오기</span></li>
-            <li><kbd>Ctrl+Alt+O</kbd><span>오버레이 표시 / 숨김</span></li>
-            <li><kbd>Ctrl+Alt+L</kbd><span>잠금 해제 (끌어서 이동)</span></li>
-            <li><kbd>Ctrl+Alt+M</kbd><span>자동 / 수동 모드</span></li>
-            <li><kbd>Ctrl+Alt+←/→</kbd><span>수동으로 단계 이동</span></li>
-            <li><kbd>Ctrl+Alt+C</kbd><span>이 제어창 열기</span></li>
-            <li><kbd>Ctrl+Alt+E</kbd><span>빌드오더 편집기</span></li>
-            <li><kbd>Ctrl+Alt+R</kbd><span>빌드 다시 읽기</span></li>
-            <li><kbd>Ctrl+Alt+Q</kbd><span>앱 종료</span></li>
+            <li><kbd>Ctrl+Alt+S</kbd><span>Start / stop</span></li>
+            <li><kbd>Ctrl+Alt+1~9</kbd><span>Load the build in that slot</span></li>
+            <li><kbd>Ctrl+Alt+O</kbd><span>Show / hide the overlay</span></li>
+            <li><kbd>Ctrl+Alt+L</kbd><span>Unlock (drag to move)</span></li>
+            <li><kbd>Ctrl+Alt+M</kbd><span>Auto / manual mode</span></li>
+            <li><kbd>Ctrl+Alt+←/→</kbd><span>Step manually</span></li>
+            <li><kbd>Ctrl+Alt+C</kbd><span>Open this control window</span></li>
+            <li><kbd>Ctrl+Alt+E</kbd><span>Build order editor</span></li>
+            <li><kbd>Ctrl+Alt+R</kbd><span>Reload builds</span></li>
+            <li><kbd>Ctrl+Alt+Q</kbd><span>Quit the app</span></li>
           </ul>
         </details>
       </section>
     </main>
 
     <footer class="footer">
-      <span class="muted small">창을 닫아도 트레이에 남습니다</span>
+      <span class="muted small">Closing this window leaves the app in the tray</span>
       <div class="footer-actions">
-        <button id="open-dir" type="button">빌드 폴더</button>
-        <button id="quit" type="button" class="danger">종료</button>
+        <button id="open-dir" type="button">Builds folder</button>
+        <button id="quit" type="button" class="danger">Quit</button>
       </div>
     </footer>
 

@@ -54,19 +54,19 @@ function renderSteps(view) {
     const li = document.createElement('li');
     li.className = 'empty';
     if (build) {
-      li.textContent = '이 빌드에 단계가 없습니다.';
+      li.textContent = 'This build has no steps.';
     } else if (view.noMatch && view.noMatch.unknownPlayer) {
       // The matchup cannot be read because we do not know which player is us.
       li.innerHTML =
-        '내 플레이어를 못 찾았습니다.<br />' +
-        '제어창 설정에 <strong>내 플레이어 이름</strong>을 넣으세요.';
+        "Can't tell which player is you.<br />" +
+        'Enter <strong>My player name</strong> in the control window settings.';
     } else if (view.noMatch) {
       // Auto-pick found nothing for this matchup. Naming it beats a blank panel.
       li.innerHTML =
-        `<strong>${matchupLabel(view.noMatch)}</strong> 빌드가 없습니다.<br />` +
-        '<code>Ctrl+Alt+숫자</code> 로 직접 고르거나 편집기에서 만드세요.';
+        `No <strong>${matchupLabel(view.noMatch)}</strong> build.<br />` +
+        'Pick one with <code>Ctrl+Alt+number</code>, or make one in the editor.';
     } else {
-      li.innerHTML = '빌드가 없습니다.<br /><code>Ctrl+Alt+E</code> 로 편집기를 여세요.';
+      li.innerHTML = 'No builds.<br />Open the editor with <code>Ctrl+Alt+E</code>.';
     }
     el.steps.append(li);
     return;
@@ -186,7 +186,7 @@ function renderSteps(view) {
     if (i === nextIndex) {
       // No countdown to give when the clock is parked or the step is already
       // due, and saying so beats leaving the highlight unexplained.
-      untilEl.textContent = counting ? `-${formatTime(until)}` : '현재 진행중';
+      untilEl.textContent = counting ? `-${formatTime(until)}` : 'in progress';
       untilEl.classList.add('current');
     }
 
@@ -202,7 +202,7 @@ function renderSteps(view) {
 function renderHeader(view) {
   const { build, game, ui, clock } = view;
 
-  el.buildLabel.textContent = build ? build.name : '빌드 없음';
+  el.buildLabel.textContent = build ? build.name : 'No build';
   el.slot.textContent = build && build.slot ? build.slot : '';
   el.slot.classList.toggle('shown', Boolean(build && build.slot));
   el.matchup.textContent = build
@@ -220,21 +220,21 @@ function renderHeader(view) {
   };
   // No badge for the mock clock: it is a dev-only detail and the control window
   // already labels it. Only what matters mid-game earns space over the screen.
-  if (ui.mode === 'manual') badge('manual', '수동');
-  if (game.isReplay) badge('replay', '리플레이');
+  if (ui.mode === 'manual') badge('manual', 'MANUAL');
+  if (game.isReplay) badge('replay', 'REPLAY');
 }
 
 function renderStatus(view) {
   const { game, ui } = view;
   let text;
-  if (!game.connected) text = 'SC2 대기 중';
-  else if (!game.inGame) text = '게임 대기 중';
+  if (!game.connected) text = 'Waiting for SC2';
+  else if (!game.inGame) text = 'Waiting for a game';
   else if (game.opponent) text = `vs ${game.opponent.name} (${RACE_LABEL[game.opponent.race] || '?'})`;
-  else text = '게임 진행 중';
+  else text = 'Game in progress';
 
   el.status.textContent = text;
   el.status.classList.toggle('live', Boolean(game.inGame));
-  el.hint.textContent = ui.locked ? 'Ctrl+Alt+C 제어창' : '헤더를 끌어 이동';
+  el.hint.textContent = ui.locked ? 'Ctrl+Alt+C control window' : 'Drag the header to move';
 }
 
 /**
@@ -260,7 +260,7 @@ window.overlay.onView((view) => {
   el.panel.style.opacity = view.settings.opacity;
   document.documentElement.style.fontSize = `${15 * (view.settings.scale || 1)}px`;
   // A second axis over the root size, for the step list alone. The window width
-  // does not follow it — that is the 가로 폭 setting — so a larger size trades
+  // does not follow it — that is the Width setting — so a larger size trades
   // room for the action text, which ellipsises rather than wrapping.
   document.documentElement.style.setProperty('--step-scale', view.settings.stepScale || 1);
   /* Every blue in the stylesheet is an offset from this angle, so the frame,

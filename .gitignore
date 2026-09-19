@@ -4,17 +4,17 @@ dist/
 icon-report.txt
 assets/icon.original.ico
 
-# 단계 그림은 블리자드 저작물이라 저장소에 두지 않습니다. manifest.json 만
-# 남기고, 이미지는 각자 tools/fetch-icons.js 로 받거나 앱에서 내려받습니다.
+# Step pictures are Blizzard's, so they are kept out of the repository. Only
+# manifest.json stays; fetch the images with tools/fetch-icons.js or from the app.
 assets/icons/*.png
 
-# 리플레이는 각자 것이라 저장소에 두지 않습니다.
+# Replays are personal, so they are kept out of the repository.
 replay/
 tools/__pycache__/
 .venv-replay/
 replay/out/
 .claude/
 
-# 빌드는 각자 뽑아 쓰는 것이라 저장소에 두지 않습니다. 배포판에 심을 샘플은
-# seed/ 에 한 개만 둡니다.
+# Builds are personal, so they are kept out of the repository. Exactly one
+# sample ships in seed/ for the release build.
 builds/

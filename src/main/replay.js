@@ -82,7 +82,7 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
         if (!done) {
           child.kill();
           done = true;
-          resolve({ code: -1, out: '', err: '시간이 너무 오래 걸려 중단했습니다.' });
+          resolve({ code: -1, out: '', err: 'It took too long, so it was stopped.' });
         }
       }, timeout);
 
@@ -140,7 +140,7 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
     if (!fs.existsSync(script)) {
       cached = {
         state: 'no-script',
-        message: '리플레이를 읽는 파일이 설치본에 없습니다: ' + script,
+        message: 'The replay reader is missing from this install: ' + script,
       };
       return cached;
     }
@@ -160,15 +160,15 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
       ? {
           state: 'needs-setup',
           python: sawInterpreter,
-          message: '파이썬이 설치돼 있습니다. 아래 버튼을 누르면 리플레이를 읽을 '
-            + '준비를 마칩니다 (한 번만, 약 3MB).',
+          message: 'Python is installed. Press the button below to finish setting up '
+            + 'replay reading (once only, about 3MB).',
         }
       : {
           state: 'no-python',
           // Not "restart the app": the probe re-runs on demand, so installing
-          // Python in another window and pressing 다시 확인 is enough.
-          message: '리플레이를 읽으려면 파이썬이 필요합니다. 아래에서 받아 설치한 뒤 '
-            + '다시 확인을 누르세요.',
+          // Python in another window and pressing Check again is enough.
+          message: 'Reading replays needs Python. Download and install it below, then '
+            + 'press Check again.',
         };
     return cached;
   }
@@ -185,7 +185,7 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
    * @param {(line: string) => void} onLine  progress, for the UI
    */
   async function setup(onLine = () => {}) {
-    if (setupRunning) return { ok: false, message: '이미 준비 중입니다.' };
+    if (setupRunning) return { ok: false, message: 'Setup is already running.' };
 
     const current = await state({ refresh: true });
     if (current.state === 'ready') return { ok: true, already: true };
@@ -198,18 +198,18 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
       const base = current.python;
 
       if (!fs.existsSync(venvPython)) {
-        onLine('전용 파이썬 환경을 만듭니다…');
+        onLine('Creating a dedicated Python environment…');
         const made = await run(base.cmd, [...base.args, '-m', 'venv', venvDir],
           { timeout: SETUP_TIMEOUT });
         if (!fs.existsSync(venvPython)) {
           return {
             ok: false,
-            message: '환경을 만들지 못했습니다.\n' + (made.err || made.out).trim(),
+            message: 'Could not create the environment.\n' + (made.err || made.out).trim(),
           };
         }
       }
 
-      onLine('필요한 파일을 받습니다…');
+      onLine('Downloading what is needed…');
       const args = ['-m', 'pip', 'install', '--disable-pip-version-check', '--no-input'];
       const installed = await run(venvPython,
         fs.existsSync(requirements)
@@ -220,11 +220,11 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
       if (await probe({ cmd: venvPython, args: [] }) !== 'ready') {
         return {
           ok: false,
-          message: '받는 데 실패했습니다. 인터넷 연결을 확인해 주세요.\n'
+          message: 'The download failed. Check your internet connection.\n'
             + (installed.err || installed.out).trim().slice(-600),
         };
       }
-      onLine('준비됐습니다.');
+      onLine('Ready.');
       return { ok: true };
     } finally {
       setupRunning = false;
@@ -246,7 +246,7 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
       return {
         ok: false,
         message: (got.err || '').trim()
-          || '리플레이를 읽지 못했습니다 (스크립트가 아무 답도 하지 않았습니다).',
+          || 'Could not read the replay (the script said nothing at all).',
       };
     }
     try {
@@ -254,14 +254,14 @@ function createReplayTool({ resourcesDir, venvDir, documentsDir }) {
     } catch (err) {
       return {
         ok: false,
-        message: '결과를 이해하지 못했습니다: ' + got.out.trim().slice(0, 300),
+        message: 'Could not make sense of the result: ' + got.out.trim().slice(0, 300),
       };
     }
   }
 
   /** Who is in these replays, so the user can pick a side. */
   function list(files) {
-    if (!files || !files.length) return Promise.resolve({ ok: false, message: '리플레이를 고르세요.' });
+    if (!files || !files.length) return Promise.resolve({ ok: false, message: 'Choose a replay.' });
     return call([...files, '--list']);
   }
 

@@ -15,9 +15,9 @@ const { downloadIcons } = require('./icon-download');
 const { createReplayTool } = require('./replay');
 
 // Width at 100%; the panel is laid out in rem off one root font-size, so the
-// content width scales linearly with the 크기 setting.
+// content width scales linearly with the Size setting.
 //
-// 410 rather than 380 because the step row gained a 단계 번호 column and the
+// 410 rather than 380 because the step row gained a step-number column and the
 // list gained its own side padding. Those come out of the action column, and
 // the action text is the thing that must not be cut, so the window takes the
 // difference instead.
@@ -110,7 +110,7 @@ function seedIconManifest() {
     fs.mkdirSync(STEP_ICONS_DIR, { recursive: true });
     fs.copyFileSync(ICON_MANIFEST, path.join(STEP_ICONS_DIR, 'manifest.json'));
   } catch (err) {
-    console.warn('아이콘 목록을 준비하지 못했습니다:', err.message);
+    console.warn('Could not prepare the icon list:', err.message);
   }
 }
 
@@ -149,7 +149,7 @@ let watcher = null;
 let running = false;
 
 const ui = {
-  visible: true, // overlay shown while running; 표시/숨김 toggles this
+  visible: true, // overlay shown while running; Show/Hide toggles this
   locked: true, // click-through; unlock only to drag the panel
   mode: 'auto', // 'auto' follows the game clock, 'manual' is hotkey-driven
   manualIndex: 0,
@@ -204,11 +204,11 @@ function createOverlay() {
   const saved = config.get('bounds');
   overlay = new BrowserWindow({
     ...(saved || defaultBounds()),
-    show: false, // stays hidden until 시작
+    show: false, // stays hidden until Start
     frame: false,
     transparent: true,
     // Sized programmatically to fit the rendered panel, and draggable by the
-    // edge once unlocked — a width drag is turned into the 가로 폭 setting by
+    // edge once unlocked — a width drag is turned into the Width setting by
     // the resize handler below, so it sticks instead of snapping back.
     resizable: true,
     movable: true,
@@ -245,7 +245,7 @@ function createOverlay() {
     // The overlay decodes it once and keeps it; a reload starts that over.
     pushCueSound();
     // Created hidden so it never flashes un-styled; it appears once it has
-    // something to draw — parked at 0:00 until 시작.
+    // something to draw — parked at 0:00 until Start.
     if (ui.visible) showOverlay();
   });
 }
@@ -431,7 +431,7 @@ function pushCueSound() {
     try {
       safeSend(overlay, 'cue-sound', fs.readFileSync(DEFAULT_CUE));
     } catch (err) {
-      console.warn('기본 효과음을 읽지 못했습니다:', err.message);
+      console.warn('Could not read the built-in sound:', err.message);
       safeSend(overlay, 'cue-sound', null);
     }
     return;
@@ -440,7 +440,7 @@ function pushCueSound() {
     safeSend(overlay, 'cue-sound', fs.readFileSync(path.join(SOUNDS_DIR, chosen.file)));
   } catch {
     // The copy is gone — the folder was cleared by hand, or never written.
-    cueSoundProblem = '효과음 파일을 찾을 수 없습니다. 다시 불러오세요.';
+    cueSoundProblem = 'The sound file could not be found. Load it again.';
     safeSend(overlay, 'cue-sound', null);
   }
 }
@@ -455,15 +455,15 @@ function setSoundFile(sourcePath) {
   if (!AUDIO_EXTENSIONS.includes(ext)) {
     // The dialog filters by extension, but a name can still be typed into it.
     cueSoundProblem = ext
-      ? `.${ext} 는 재생할 수 없는 형식입니다.`
-      : '오디오 파일이 아닙니다.';
+      ? `.${ext} is not a format that can be played.`
+      : 'Not an audio file.';
     push();
     return;
   }
   try {
     const { size } = fs.statSync(sourcePath);
     if (size > MAX_SOUND_BYTES) {
-      cueSoundProblem = `파일이 너무 큽니다 (${Math.round(size / 1024 / 1024)}MB). 5MB 이하로 골라주세요.`;
+      cueSoundProblem = `That file is too big (${Math.round(size / 1024 / 1024)}MB). Pick one under 5MB.`;
       push();
       return;
     }
@@ -482,7 +482,7 @@ function setSoundFile(sourcePath) {
     pushCueSound();
     push();
   } catch (err) {
-    cueSoundProblem = `파일을 읽지 못했습니다: ${err.message}`;
+    cueSoundProblem = `Could not read the file: ${err.message}`;
     push();
   }
 }
@@ -575,14 +575,14 @@ function resetProgress() {
 /**
  * Showing the overlay and running the clock are separate axes. The overlay can
  * sit on screen parked at 0:00 while stopped, so you can line up a build before
- * the game and press 시작 when it actually begins.
+ * the game and press Start when it actually begins.
  */
 /**
  * While stopped, optionally wait for a game to begin and start then. Pressing
- * 시작 by hand at the right moment is the app's biggest bit of friction: too
+ * Pressing Start by hand at the right moment is the app's biggest bit of friction: too
  * early and nothing happens, too late and the opening is already marked done.
  *
- * This is a separate, slower poll so that "정지 상태에서는 SC2 를 읽지 않습니다"
+ * This is a separate, slower poll so that "nothing reads SC2 while stopped"
  * stays true in spirit — it asks one question a second and nothing else.
  */
 function syncWatcher() {
@@ -665,7 +665,7 @@ function overlayWidth() {
   const scale = Number(config.get('scale')) || 1;
   // Room for the text, independent of how big the text is. Widening lets a long
   // step read in full instead of being cut to an ellipsis; narrowing gives the
-  // game back the screen. Applied on top of 크기 so the two compose.
+  // game back the screen. Applied on top of Size so the two compose.
   const width = Number(config.get('widthScale')) || 1;
   const extra = ICON_COLUMN[config.get('iconMode')] || 0;
   return Math.round((BASE_WIDTH + extra) * scale * width);
@@ -673,7 +673,7 @@ function overlayWidth() {
 
 /**
  * Sizes the window to the panel the renderer just drew. Width comes from the
- * 크기 setting; height is whatever the content turned out to be, so changing
+ * Size setting; height is whatever the content turned out to be, so changing
  * scale or the number of visible steps moves the window's edges too instead of
  * clipping the text or leaving dead space.
  *
@@ -710,12 +710,12 @@ function fitOverlay(contentHeight) {
   config.set('bounds', overlay.getBounds());
 }
 
-const WIDTH_SCALE = { min: 0.7, max: 1.8 }; // the 가로 폭 slider's range
+const WIDTH_SCALE = { min: 0.7, max: 1.8 }; // the Width slider's range
 
 /**
- * Turns a drag on the window's edge into the 가로 폭 setting.
+ * Turns a drag on the window's edge into the Width setting.
  *
- * Both of the overlay's dimensions are derived — the width from 크기 and 가로 폭,
+ * Both of the overlay's dimensions are derived — the width from Size and Width,
  * the height from what the renderer actually drew — so a dragged edge used to
  * be undone by the next fit, and the control window never heard about it. The
  * drag now sets the setting it was really asking for, which is what makes it
@@ -777,9 +777,9 @@ function setLocked(locked) {
 /**
  * Switching build stops the run and rewinds to 0:00. Carrying the old clock
  * into a different build would drop you into its middle, which is never what
- * picking a new build means — you press 시작 again when you are ready.
+ * picking a new build means — you press Start again when you are ready.
  *
- * How long the choice sticks depends on the 자동 선택 setting:
+ * How long the choice sticks depends on the auto-pick setting:
  *
  * - auto on  — this is a one-game override. It is dropped when the game ends
  *   and never persisted, so auto-pick is in charge again next game.
@@ -814,7 +814,7 @@ function toggleFavorite(source) {
 function selectSlot(slot) {
   const build = library.bySlot(slot);
   if (!build) {
-    flash(`${slot} · 빈 슬롯`);
+    flash(`${slot} · empty slot`);
     return;
   }
   selectBuild(build);
@@ -899,22 +899,22 @@ function refreshTrayMenu() {
       click: () => selectSlot(b.slot),
     }));
 
-  tray.setToolTip(`SC2 Build Overlay — ${running ? '실행 중' : '정지됨'}`);
+  tray.setToolTip(`SC2 Build Overlay — ${running ? 'running' : 'stopped'}`);
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { label: running ? '■ 정지  (Ctrl+Alt+S)' : '▶ 시작  (Ctrl+Alt+S)', click: () => (running ? stop() : start()) },
+      { label: running ? '■ Stop  (Ctrl+Alt+S)' : '▶ Start  (Ctrl+Alt+S)', click: () => (running ? stop() : start()) },
       { type: 'separator' },
-      { label: '제어창 열기…  (Ctrl+Alt+C)', click: () => control.open() },
-      { label: '빌드오더 편집기…  (Ctrl+Alt+E)', click: () => editor.open() },
+      { label: 'Open control window…  (Ctrl+Alt+C)', click: () => control.open() },
+      { label: 'Build order editor…  (Ctrl+Alt+E)', click: () => editor.open() },
       { type: 'separator' },
-      { label: '오버레이 표시/숨김  (Ctrl+Alt+O)', click: () => setVisible(!ui.visible) },
-      { label: '잠금 해제 / 잠금  (Ctrl+Alt+L)', click: () => setLocked(!ui.locked) },
-      ...(slots.length ? [{ type: 'separator' }, { label: '빌드 슬롯', submenu: slots }] : []),
+      { label: 'Show/hide overlay  (Ctrl+Alt+O)', click: () => setVisible(!ui.visible) },
+      { label: 'Unlock / lock  (Ctrl+Alt+L)', click: () => setLocked(!ui.locked) },
+      ...(slots.length ? [{ type: 'separator' }, { label: 'Build slots', submenu: slots }] : []),
       { type: 'separator' },
-      { label: '빌드 폴더 열기', click: () => shell.openPath(BUILDS_DIR) },
-      { label: '빌드 다시 읽기  (Ctrl+Alt+R)', click: () => library.load() },
+      { label: 'Open builds folder', click: () => shell.openPath(BUILDS_DIR) },
+      { label: 'Reload builds  (Ctrl+Alt+R)', click: () => library.load() },
       { type: 'separator' },
-      { label: '종료  (Ctrl+Alt+Q)', click: () => app.quit() },
+      { label: 'Quit  (Ctrl+Alt+Q)', click: () => app.quit() },
     ])
   );
 }
@@ -933,7 +933,7 @@ function boot() {
   seedIconManifest();
 
   const iconSet = stepIcons.load(STEP_ICONS_DIR);
-  if (iconSet.error) console.warn('단계 아이콘을 읽지 못했습니다:', iconSet.error);
+  if (iconSet.error) console.warn('Could not read the step icons:', iconSet.error);
 
   library = new Library(BUILDS_DIR);
   library.on('loaded', () => {
@@ -971,7 +971,7 @@ function boot() {
         if ('myName' in patch) client.setMyName(patch.myName);
         // These change the window width, which no height report would carry:
         // the renderer only reports when its own height moves, and neither of
-        // them does that. 단계 글자 is the exception — it retells its height.
+        // them does that. Step text is the exception — it retells its height.
         if ('scale' in patch || 'widthScale' in patch) fitOverlay(lastContentHeight);
         if ('autoStartOnGame' in patch) syncWatcher();
         push();

@@ -73,7 +73,7 @@
     if (!bytes || !bytes.byteLength) return { ok: true };
 
     const target = context();
-    if (!target) return { ok: false, message: '오디오 장치를 열지 못했습니다.' };
+    if (!target) return { ok: false, message: 'Could not open an audio device.' };
     try {
       // decodeAudioData detaches what it is given, so it gets a copy: the
       // incoming view belongs to the IPC message, not to us.
@@ -82,7 +82,7 @@
       return { ok: true };
     } catch {
       sample = null;
-      return { ok: false, message: '이 형식은 재생할 수 없습니다. WAV 나 MP3 를 써보세요.' };
+      return { ok: false, message: 'This format cannot be played. Try a WAV or an MP3.' };
     }
   }
 

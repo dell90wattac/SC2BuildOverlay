@@ -112,7 +112,7 @@ function markDirty() {
  * rebuilt when the list changes shape: add, delete, sort, import, load.
  *
  * `step.section` has no column: it is carried through untouched so that saving
- * a hand-written file keeps its [구간] markers. New steps inherit the section of
+ * a hand-written file keeps its [phase] markers. New steps inherit the section of
  * the step above, and the preview is where the markers are visible.
  */
 function makeRow(step) {
@@ -152,7 +152,7 @@ function makeRow(step) {
   const action = document.createElement('input');
   action.className = 't-action';
   action.type = 'text';
-  action.placeholder = '예: 병영';
+  action.placeholder = 'e.g. Barracks';
   action.value = step.action || '';
   action.addEventListener('input', () => {
     step.action = action.value;
@@ -181,7 +181,7 @@ function makeRow(step) {
 
   const note = document.createElement('input');
   note.type = 'text';
-  note.placeholder = '선택';
+  note.placeholder = 'Optional';
   note.value = step.note || '';
   note.addEventListener('input', () => {
     step.note = note.value.trim() || null;
@@ -191,7 +191,7 @@ function makeRow(step) {
   const del = document.createElement('button');
   del.type = 'button';
   del.className = 'row-del';
-  del.title = '이 단계 삭제';
+  del.title = 'Delete this step';
   del.textContent = '✕';
   del.addEventListener('click', () => {
     state.steps = state.steps.filter((s) => s !== step);
@@ -236,12 +236,12 @@ function refreshOrderWarning() {
   const split = splitSections([...timed].sort((a, b) => a.at - b.at));
 
   const notes = [];
-  if (outOfOrder) notes.push('시간 순서가 뒤섞여 있습니다. 저장할 때 자동으로 시간순 정렬됩니다.');
-  if (untimed) notes.push(`시간이 비어 있는 단계 ${untimed}개는 저장되지 않습니다.`);
+  if (outOfOrder) notes.push('The times are out of order. They are sorted by time automatically on save.');
+  if (untimed) notes.push(`${untimed} steps have no time and will not be saved.`);
   if (split.length) {
     notes.push(
-      `구간 ${split.map((s) => `[${s}]`).join(', ')} 이 시간순으로 보면 두 군데로 나뉩니다. ` +
-        '아래 미리보기에서 확인하세요 (구간은 텍스트 에디터에서 고칠 수 있습니다).'
+      `Phase ${split.map((s) => `[${s}]`).join(', ')} splits into two places once sorted by time. ` +
+        'Check it in the preview below (phases can be fixed in a text editor).'
     );
   }
   el.orderWarning.textContent = notes.join('\n');
@@ -327,13 +327,13 @@ function refreshPreview() {
     if (seq !== previewSeq) return;
 
     el.preview.textContent = text;
-    el.previewMeta.textContent = `${steps}단계 · ${new TextEncoder().encode(text).length} bytes`;
+    el.previewMeta.textContent = `${steps} steps · ${new TextEncoder().encode(text).length} bytes`;
     el.problems.textContent = problems.length
-      ? problems.map((p) => `${p.line}행: ${p.message}`).join('\n')
+      ? problems.map((p) => `line ${p.line}: ${p.message}`).join('\n')
       : '';
     el.problems.classList.toggle('bad', problems.length > 0);
     el.filename.placeholder = suggestFilename();
-    if (state.dirty) setStatus(state.replacing ? `${state.replacing} · 저장 안 됨` : '새 빌드 · 저장 안 됨');
+    if (state.dirty) setStatus(state.replacing ? `${state.replacing} · unsaved` : 'New build · unsaved');
   }, 120);
 }
 
@@ -356,7 +356,7 @@ function refreshSlotOptions() {
   });
 
   const mine = el.slot.value ? Number(el.slot.value) : null;
-  if (mine && !holders.has(mine)) holders.set(mine, el.name.value.trim() || '이 빌드');
+  if (mine && !holders.has(mine)) holders.set(mine, el.name.value.trim() || 'this build');
 
   [...el.slot.options].forEach((opt) => {
     if (!opt.value) return;
@@ -399,7 +399,7 @@ async function refreshList(activeSource) {
 
 function confirmDiscard() {
   if (!state.dirty) return true;
-  return window.confirm('저장하지 않은 변경이 있습니다. 버리고 이동할까요?');
+  return window.confirm('There are unsaved changes. Discard them and move on?');
 }
 
 async function loadBuild(source) {
@@ -413,17 +413,17 @@ async function loadBuild(source) {
     el.remove.disabled = false;
 
     const warnings = [];
-    if (result.hasComments) warnings.push('이 파일에는 # 주석이 있습니다. 편집기로 저장하면 주석은 사라집니다.');
+    if (result.hasComments) warnings.push('This file has # comments. Saving from the editor drops them.');
     if (result.problems.length) {
-      warnings.push(...result.problems.map((p) => `${p.line}행: ${p.message}`));
+      warnings.push(...result.problems.map((p) => `line ${p.line}: ${p.message}`));
     }
     el.orderWarning.textContent = warnings.join('\n');
 
-    setStatus(`${result.filename} 불러옴`, 'ok');
+    setStatus(`Loaded ${result.filename}`, 'ok');
     refreshPreview();
     await refreshList(result.filename);
   } catch (err) {
-    setStatus(`불러오기 실패: ${err.message}`, 'bad');
+    setStatus(`Could not load: ${err.message}`, 'bad');
   }
 }
 
@@ -434,7 +434,7 @@ function newBuild() {
   state.replacing = null;
   state.dirty = false;
   el.remove.disabled = true;
-  setStatus('새 빌드');
+  setStatus('New build');
   refreshPreview();
   refreshList(null);
   el.name.focus();
@@ -443,12 +443,12 @@ function newBuild() {
 async function save() {
   const build = currentBuild();
   if (!build.name) {
-    setStatus('빌드 이름을 입력하세요.', 'bad');
+    setStatus('Enter a build name.', 'bad');
     el.name.focus();
     return;
   }
   if (build.steps.length === 0) {
-    setStatus('시간과 행동이 채워진 단계가 하나도 없습니다.', 'bad');
+    setStatus('Not one step has both a time and an action.', 'bad');
     return;
   }
 
@@ -465,9 +465,9 @@ async function save() {
   el.remove.disabled = false;
 
   const swap = result.swapped
-    ? ` · ${result.swapped.name} → ${result.swapped.slot ? `${result.swapped.slot}번` : '슬롯 없음'}`
+    ? ` · ${result.swapped.name} → ${result.swapped.slot ? `slot ${result.swapped.slot}` : 'no slot'}`
     : '';
-  setStatus(`${result.filename} 저장 · ${result.steps}단계${swap}`, 'ok');
+  setStatus(`Saved ${result.filename} · ${result.steps} steps${swap}`, 'ok');
   await refreshList(result.filename);
 }
 
@@ -478,7 +478,7 @@ async function remove() {
     setStatus(result.message, 'bad');
     return;
   }
-  setStatus('휴지통으로 옮겼습니다.', 'ok');
+  setStatus('Moved to the trash.', 'ok');
   state.dirty = false;
   newBuild();
   await refreshList(null);
@@ -510,15 +510,15 @@ function renderBranches(branches, selected) {
 
     const games = document.createElement('span');
     games.className = 'num';
-    games.textContent = b.games != null ? `${b.games}판` : '—';
+    games.textContent = b.games != null ? `${b.games} games` : '—';
 
     const wr = document.createElement('span');
     wr.className = 'wr';
-    wr.textContent = b.winRate != null ? `승률 ${Math.round(b.winRate * 100)}%` : '승률 —';
+    wr.textContent = b.winRate != null ? `${Math.round(b.winRate * 100)}% WR` : 'WR —';
 
     const steps = document.createElement('span');
     steps.className = 'num';
-    steps.textContent = `${b.steps}단계`;
+    steps.textContent = `${b.steps} steps`;
 
     const label = document.createElement('span');
     label.className = 'label';
@@ -550,7 +550,7 @@ async function useBranch(branchId, branches) {
   el.importReport.textContent = result.notes.join('\n');
   el.importReport.classList.toggle('bad', result.missing.length > 0);
 
-  setStatus(`${result.build.steps.length}단계 가져옴 · 파일 이름을 정하고 저장하세요`, 'ok');
+  setStatus(`Imported ${result.build.steps.length} steps · name the file and save`, 'ok');
   refreshPreview();
 }
 
@@ -566,7 +566,7 @@ async function openExport() {
   // Naming the tree matters: an export carries every race the site had open, and
   // only this one's branches are listed.
   const race = result.branches.length ? result.branches[0].race : null;
-  const tree = race ? ` · ${race} 트리 ${result.branches.length}개 분기` : '';
+  const tree = race ? ` · ${race} tree, ${result.branches.length} branches` : '';
   el.exportSource.textContent =
     `${result.filename}${result.title ? ` — ${result.title}` : ''}${tree}`;
   el.branchBox.hidden = false;
@@ -586,9 +586,9 @@ async function importText() {
   state.dirty = true;
   el.importPanel.open = false;
   el.orderWarning.textContent = problems.length
-    ? problems.map((p) => `${p.line}행: ${p.message}`).join('\n')
+    ? problems.map((p) => `line ${p.line}: ${p.message}`).join('\n')
     : '';
-  setStatus(`${build.steps.length}단계 가져옴`, 'ok');
+  setStatus(`Imported ${build.steps.length} steps`, 'ok');
   refreshPreview();
 }
 
@@ -614,19 +614,19 @@ async function refreshReplayState(refresh) {
     // download instead, so the message is something the user can act on.
     el.replaySetup.hidden = got.state !== 'needs-setup';
     el.replayGetPython.hidden = got.state !== 'no-python';
-    el.replaySetupState.textContent = got.state === 'setting-up' ? '준비 중…' : '';
+    el.replaySetupState.textContent = got.state === 'setting-up' ? 'Setting up…' : '';
   }
   return ready;
 }
 
 async function runReplaySetup() {
   el.replaySetup.disabled = true;
-  el.replaySetupState.textContent = '준비 중…';
+  el.replaySetupState.textContent = 'Setting up…';
   const result = await window.editor.replaySetup();
   el.replaySetup.disabled = false;
 
   if (!result.ok) {
-    el.replaySetupWhy.textContent = result.message || '준비하지 못했습니다.';
+    el.replaySetupWhy.textContent = result.message || 'Setup failed.';
     el.replaySetupState.textContent = '';
     return;
   }
@@ -672,11 +672,11 @@ function renderReplayPlayers(players, chosen) {
 
     const who = document.createElement('span');
     who.className = 'wr';
-    who.textContent = p.human ? '사람' : 'AI';
+    who.textContent = p.human ? 'Human' : 'AI';
 
     const result = document.createElement('span');
     result.className = 'num';
-    result.textContent = p.won ? '승' : '패';
+    result.textContent = p.won ? 'W' : 'L';
 
     const name = document.createElement('span');
     name.className = 'label';
@@ -692,7 +692,7 @@ function renderReplayPlayers(players, chosen) {
 /** Converts the chosen player's build and drops it into the form. */
 async function useReplayPlayer(playerId, players) {
   el.replayReport.classList.remove('bad');
-  el.replayReport.textContent = '읽는 중…';
+  el.replayReport.textContent = 'Reading…';
 
   const result = await window.editor.convertReplay({
     player: playerId,
@@ -700,7 +700,7 @@ async function useReplayPlayer(playerId, players) {
     extras: replayExtras(),
   });
   if (!result.ok) {
-    el.replayReport.textContent = result.message || '읽지 못했습니다.';
+    el.replayReport.textContent = result.message || 'Could not read it.';
     el.replayReport.classList.add('bad');
     return;
   }
@@ -718,16 +718,16 @@ async function useReplayPlayer(playerId, players) {
   // Only what the user can act on. Which of the three ways each time was
   // worked out is a question for whoever is debugging the extraction, and it
   // lives in the command line's report; here it was just noise.
-  const notes = [`${result.steps}단계`];
-  if (result.missing.length) notes.push(`사전에 없는 이름: ${result.missing.join(', ')}`);
+  const notes = [`${result.steps} steps`];
+  if (result.missing.length) notes.push(`Names not in the dictionary: ${result.missing.join(', ')}`);
   if (result.noBuildTime.length) {
-    notes.push(`빌드 시간을 몰라 나온 시각을 쓴 것: ${result.noBuildTime.join(', ')}`);
+    notes.push(`Build time unknown, so the time it appeared was used: ${result.noBuildTime.join(', ')}`);
   }
   el.replayReport.textContent = notes.join(' · ');
   el.replayReport.classList.toggle('bad',
     result.missing.length > 0 || result.noBuildTime.length > 0);
 
-  setStatus(`${result.build.steps.length}단계 가져옴 · 파일 이름을 정하고 저장하세요`, 'ok');
+  setStatus(`Imported ${result.build.steps.length} steps · name the file and save`, 'ok');
   refreshPreview();
 }
 
@@ -735,7 +735,7 @@ async function openReplay() {
   if (!confirmDiscard()) return;
 
   el.openReplay.disabled = true;
-  el.replaySource.textContent = '읽는 중…';
+  el.replaySource.textContent = 'Reading…';
   const result = await window.editor.openReplay();
   el.openReplay.disabled = false;
 
@@ -765,7 +765,7 @@ async function openReplay() {
   // numbers rest on that rather than find out from a build that reads oddly.
   if (r.fellBackTo) {
     el.replaySource.textContent
-      += ` · 이 패치의 해독표가 없어 ${r.fellBackTo} 것으로 읽었습니다`;
+      += ` · no decoder for this patch, so it was read as ${r.fellBackTo}`;
   }
 
   // The human by default, which is what someone reviewing their own game wants.
@@ -805,7 +805,7 @@ el.replaySetup.addEventListener('click', runReplaySetup);
 el.replayGetPython.addEventListener('click', () => window.editor.openPythonSite());
 el.replayRecheck.addEventListener('click', async () => {
   el.replayRecheck.disabled = true;
-  el.replaySetupState.textContent = '확인 중…';
+  el.replaySetupState.textContent = 'Checking…';
   await refreshReplayState(true);
   el.replaySetupState.textContent = '';
   el.replayRecheck.disabled = false;
@@ -850,8 +850,8 @@ window.editor.onClock((clock) => {
   el.clockChip.textContent = live
     ? `${formatTime(clock.displayTime)}${clock.mock ? ' (mock)' : ''}`
     : clock.connected
-      ? '게임 대기 중'
-      : 'SC2 대기 중';
+      ? 'Waiting for a game'
+      : 'Waiting for SC2';
   el.clockChip.classList.toggle('live', live);
   el.addAtClock.disabled = !live;
 });

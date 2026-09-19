@@ -468,7 +468,7 @@ summary {
   margin: 0.5rem 0 0.2rem;
 }
 
-/* A number sitting inside a sentence — "앞 [8]분까지만" — rather than in its
+/* A number sitting inside a sentence — "First [8] minutes only" — rather than in its
    own labelled field, so it stays narrow and does not break the line. */
 .inline-num {
   width: 3.2rem;
@@ -557,7 +557,7 @@ button.wide {
   color: var(--danger);
 }
 
-/* ---------- 행동 추천어 ---------- */
+/* ---------- Action suggestions ---------- */
 
 /* Fixed, not absolute: the rows scroll inside their own pane, and a popup
    positioned against the document would slide away from its field. Coordinates

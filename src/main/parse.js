@@ -67,7 +67,7 @@ function parseBuild(text, source) {
 
       const action = rest.replace(/\s+/g, ' ').trim();
       if (!action) {
-        problems.push({ line: lineNo, message: '시간만 있고 행동이 비어 있습니다.' });
+        problems.push({ line: lineNo, message: 'A time with no action after it.' });
         return;
       }
       steps.push({ at, supply, action, note, section, line: lineNo });
@@ -80,7 +80,7 @@ function parseBuild(text, source) {
       return;
     }
 
-    problems.push({ line: lineNo, message: `해석할 수 없는 줄: ${line}` });
+    problems.push({ line: lineNo, message: `Could not read this line: ${line}` });
   });
 
   steps.sort((a, b) => a.at - b.at || a.line - b.line);
@@ -91,7 +91,7 @@ function parseBuild(text, source) {
     if (Number.isInteger(n) && n >= 1 && n <= 9) {
       declaredSlot = n;
     } else {
-      problems.push({ line: 0, message: `slot 은 1~9 사이 숫자여야 합니다 (받은 값: ${meta.slot})` });
+      problems.push({ line: 0, message: `slot must be a number from 1 to 9 (got: ${meta.slot})` });
     }
   }
 

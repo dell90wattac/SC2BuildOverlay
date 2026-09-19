@@ -30,13 +30,13 @@ const REPLAY_STATE = {
   ready: { state: 'ready' },
   'needs-setup': {
     state: 'needs-setup',
-    message: '파이썬이 설치돼 있습니다. 아래 버튼을 누르면 리플레이를 읽을 준비를 '
-      + '마칩니다 (한 번만, 약 3MB).',
+    message: 'Python is installed. Press the button below to finish setting up '
+      + 'replay reading (once only, about 3MB).',
   },
   'no-python': {
     state: 'no-python',
-    message: '리플레이를 읽으려면 파이썬이 필요합니다. 아래에서 받아 설치한 뒤 '
-      + '다시 확인을 누르세요.',
+    message: 'Reading replays needs Python. Download and install it below, then '
+      + 'press Check again.',
   },
 }[process.env.PREVIEW_REPLAY || 'ready'] || null;
 
@@ -68,7 +68,7 @@ const REPLAY_FILE = (() => {
 
 const replayApi = (() => {
   if (!REPLAY_FILE) {
-    return async () => ({ ok: false, message: 'PREVIEW_REPLAY 에 리플레이 파일을 주세요.' });
+    return async () => ({ ok: false, message: 'Point PREVIEW_REPLAY at a replay file.' });
   }
   const { createReplayTool } = require(path.join(REPO, 'src', 'main', 'replay.js'));
   const { parseBuild } = require(path.join(REPO, 'src', 'main', 'parse.js'));
@@ -93,7 +93,7 @@ const replayApi = (() => {
       const got = await tool.list([REPLAY_FILE]);
       if (!got.ok) return got;
       const replay = (got.replays || [])[0];
-      return replay ? { ok: true, replay } : { ok: false, message: '리플레이를 읽지 못했습니다.' };
+      return replay ? { ok: true, replay } : { ok: false, message: 'Could not read the replay.' };
     }
     if (action === 'convert') {
       const minutes = params.get('minutes');
@@ -104,12 +104,12 @@ const replayApi = (() => {
       });
       if (!got.ok) return got;
       const first = (got.builds || [])[0];
-      if (!first) return { ok: false, message: '단계를 하나도 찾지 못했습니다.' };
+      if (!first) return { ok: false, message: 'No steps were found at all.' };
 
       const parsed = parseBuild(first.text, path.basename(REPLAY_FILE));
       if (!parsed.steps.length) {
-        const why = (parsed.problems || []).map((p) => `${p.line}행: ${p.message}`).join(' · ');
-        return { ok: false, message: why || '읽을 수 있는 단계가 없습니다.' };
+        const why = (parsed.problems || []).map((p) => `line ${p.line}: ${p.message}`).join(' · ');
+        return { ok: false, message: why || 'No readable steps.' };
       }
       return {
         ok: true,
@@ -128,11 +128,11 @@ const replayApi = (() => {
         noBuildTime: first.noBuildTime || [],
       };
     }
-    return { ok: false, message: '알 수 없는 요청: ' + action };
+    return { ok: false, message: 'Unknown request: ' + action };
   };
 })();
 
-/* The editor's 행동 suggestions, read from the real manifest so the preview
+/* The editor's Action suggestions, read from the real manifest so the preview
    offers the same vocabulary the app does. Served over this server's /icons/
    route, since a page on http cannot load file:// images. */
 const TERMS = (() => {
@@ -180,14 +180,14 @@ if (EXPORT_FILE) {
 const EDITOR_STUB = `<script>
 (() => {
   const SAMPLE = {
-    name: 'TvZ 리퍼 앞마당', race: 'T', vs: 'Z', slot: 4, notes: '포맷 예시',
+    name: 'TvZ Reaper Expand', race: 'T', vs: 'Z', slot: 4, notes: 'format example',
     steps: [
-      { at: 0, supply: 12, action: 'SCV 계속 생산', note: null, section: '오프닝' },
-      { at: 12, supply: 14, action: '보급고', note: null, section: '오프닝' },
-      { at: 20, supply: 16, action: '병영', note: null, section: '오프닝' },
-      { at: 40, supply: 16, action: '정련소', note: '리퍼 나오면 바로', section: '오프닝' },
-      { at: 72, supply: 19, action: '사령부 (앞마당)', note: null, section: '확장' },
-      { at: 90, supply: 20, action: '리퍼', note: null, section: '확장' }
+      { at: 0, supply: 12, action: 'SCV, keep producing', note: null, section: 'Opening' },
+      { at: 12, supply: 14, action: 'Supply Depot', note: null, section: 'Opening' },
+      { at: 20, supply: 16, action: 'Barracks', note: null, section: 'Opening' },
+      { at: 40, supply: 16, action: 'Refinery', note: 'right as the Reaper pops', section: 'Opening' },
+      { at: 72, supply: 19, action: 'Command Center (natural)', note: null, section: 'Expand' },
+      { at: 90, supply: 20, action: 'Reaper', note: null, section: 'Expand' }
     ]
   };
   function serialize(b) {
@@ -209,8 +209,8 @@ const EDITOR_STUB = `<script>
     list: async () => [
       { source: '1-tvt.txt', name: 'TvT', slot: 1, declaredSlot: 1, steps: 0, problems: 0 },
       { source: '2-tvp.txt', name: 'TvP', slot: 2, declaredSlot: 2, steps: 0, problems: 0 },
-      { source: '3-allin.txt', name: '올인', slot: 3, declaredSlot: 3, steps: 0, problems: 0 },
-      { source: 'example-tvz.txt', name: 'TvZ 리퍼 앞마당 (예시)', slot: 4, declaredSlot: null, steps: 16, problems: 0 }
+      { source: '3-allin.txt', name: 'All-in', slot: 3, declaredSlot: 3, steps: 0, problems: 0 },
+      { source: 'example-tvz.txt', name: 'TvZ Reaper Expand (example)', slot: 4, declaredSlot: null, steps: 16, problems: 0 }
     ],
     read: async () => ({ filename: 'example-tvz.txt', raw: '', build: SAMPLE, problems: [], hasComments: true }),
     preview: async (b) => ({ text: serialize(b), problems: [], steps: b.steps.length }),
@@ -221,15 +221,15 @@ const EDITOR_STUB = `<script>
     terms: async () => ${JSON.stringify(TERMS)},
     openExport: async () => {
       const p = ${JSON.stringify(EXPORT_PROBE)};
-      if (!p.ok) return { ok: false, message: p.message || '미리보기에 익스포트가 설정되지 않았습니다 (PREVIEW_EXPORT)' };
+      if (!p.ok) return { ok: false, message: p.message || 'No export is configured for the preview (PREVIEW_EXPORT)' };
       window.__probe = p;
       return { ok: true, filename: p.filename, title: p.title, branches: p.branches, selected: p.selected };
     },
     convertExport: async ({ branchId, options }) => {
       const p = window.__probe;
-      if (!p) return { ok: false, message: '먼저 파일을 여세요.' };
+      if (!p) return { ok: false, message: 'Open a file first.' };
       const key = branchId + '|' + Boolean(options && options.notes) + '|' + (options ? options.situational !== false : true);
-      return p.results[key] || { ok: false, message: '미리보기에 해당 조합이 없습니다: ' + key };
+      return p.results[key] || { ok: false, message: 'The preview has no such combination: ' + key };
     },
     /* Either canned states, or the real modules over /api/replay/. */
     replayState: async () => ${REPLAY_FILE
@@ -242,21 +242,21 @@ const EDITOR_STUB = `<script>
     })`
       : `(async () => {
       await new Promise((r) => setTimeout(r, 600));
-      window.__replayProgress && window.__replayProgress('전용 파이썬 환경을 만듭니다…');
+      window.__replayProgress && window.__replayProgress('Creating a dedicated Python environment…');
       await new Promise((r) => setTimeout(r, 900));
-      window.__replayProgress && window.__replayProgress('필요한 파일을 받습니다…');
+      window.__replayProgress && window.__replayProgress('Downloading what is needed…');
       await new Promise((r) => setTimeout(r, 900));
-      return { ok: false, message: '미리보기에서는 실제로 준비하지 않습니다.' };
+      return { ok: false, message: 'The preview does not actually run setup.' };
     })()`},
     onReplayProgress: (cb) => { window.__replayProgress = cb; },
-    openPythonSite: async () => { console.log('preview: python.org 을 열었다고 가정'); },
+    openPythonSite: async () => { console.log('preview: pretending python.org was opened'); },
     openReplay: async () => ${REPLAY_FILE
       ? "fetch('/api/replay/open').then((r) => r.json())"
       : `({ ok: true, replay: {
-      name: '토스전 4차관', map: 'Washout LE', version: '5.0.16.97563', seconds: 304,
+      name: 'PvP 4-Gate', map: 'Washout LE', version: '5.0.16.97563', seconds: 304,
       players: [
-        { id: 1, name: '내계정', race: '프로토스', human: true, won: true },
-        { id: 2, name: '인공지능 칸 (아주 쉬움)', race: '프로토스', human: false, won: false }
+        { id: 1, name: 'MyAccount', race: 'Protoss', human: true, won: true },
+        { id: 2, name: 'A.I. Kahn (Very Easy)', race: 'Protoss', human: false, won: false }
       ]
     } })`},
     convertReplay: async ({ player, minutes, extras }) => ${REPLAY_FILE
@@ -277,8 +277,8 @@ const EDITOR_STUB = `<script>
 const BUILDS = [
   { source: '1-tvt.txt', name: 'TvT', slot: 1, race: 'T', vs: 'T', steps: 0, problems: 0 },
   { source: '2-tvp.txt', name: 'TvP', slot: 2, race: 'T', vs: 'P', steps: 0, problems: 0 },
-  { source: '3-allin.txt', name: '올인', slot: 3, race: 'T', vs: '*', steps: 0, problems: 0 },
-  { source: 'example-tvz.txt', name: 'TvZ 리퍼 앞마당 (예시)', slot: 4, race: 'T', vs: 'Z', steps: 16, problems: 0 }
+  { source: '3-allin.txt', name: 'All-in', slot: 3, race: 'T', vs: '*', steps: 0, problems: 0 },
+  { source: 'example-tvz.txt', name: 'TvZ Reaper Expand (example)', slot: 4, race: 'T', vs: 'Z', steps: 16, problems: 0 }
 ];
 const CONTROL_STUB = `<script>
 (() => {
@@ -287,7 +287,7 @@ const CONTROL_STUB = `<script>
   let pinned = null, favs = [];
   const settings = { iconMode: '${ICON_MODE}', themeHue: ${THEME_HUE}, themeSat: ${THEME_SAT}, iconsAvailable: true, iconFetch: null, showHeader: true, showFooter: true, opacity: 0.9, scale: 1, stepScale: 1, widthScale: 1, overlayWidth: 380, lookahead: 6, lookbehind: 1, leadSeconds: 3, autoPick: true, autoStart: false, autoStartOnGame: false, myName: '', soundEnabled: true, soundVolume: 0.5, soundFile: null, soundProblem: null };
   let listener = null;
-  const step = { at: 72, supply: 19, action: '사령부 (앞마당)' };
+  const step = { at: 72, supply: 19, action: 'Command Center (natural)' };
   function emit() {
     if (!listener) return;
     listener({
@@ -319,7 +319,7 @@ const CONTROL_STUB = `<script>
     updateSettings: async (p) => {
       Object.assign(settings, p);
       // The real figure comes from the main process (overlayWidth). Mirrored
-      // here, or the 가로 폭 slider would sit reporting the width it started at.
+      // here, or the Width slider would sit reporting the width it started at.
       const ICON_COLUMN = { none: 0, small: 1.15 * 15 + 6, large: 2.5 * 15 + 6 };
       settings.overlayWidth = Math.round(
         (380 + (ICON_COLUMN[settings.iconMode] || 0)) * settings.scale * settings.widthScale
@@ -329,7 +329,7 @@ const CONTROL_STUB = `<script>
     setVisible: async (v) => { visible = v; emit(); },
     setLocked: async (l) => { locked = l; emit(); },
     setMode: async (m) => { mode = m; emit(); },
-    pickSound: async () => { settings.soundFile = '미리보기.wav'; settings.soundProblem = null; emit(); },
+    pickSound: async () => { settings.soundFile = 'preview.wav'; settings.soundProblem = null; emit(); },
     resetSound: async () => { settings.soundFile = null; settings.soundProblem = null; emit(); },
     fetchIcons: async () => {
       settings.iconFetch = { running: true, done: 0, total: 196, message: null };
@@ -379,11 +379,11 @@ const OVERLAY_BUILD = (() => {
   })();
 
   if (!found) {
-    console.warn('builds/ 와 seed/ 에 빌드 파일이 없어 오버레이 미리보기는 비어 있습니다.');
-    return parseBuild('name: (빌드 없음)\nrace: T\n', 'empty.txt');
+    console.warn('No build files in builds/ or seed/, so the overlay preview is empty.');
+    return parseBuild('name: (no build)\nrace: T\n', 'empty.txt');
   }
   if (wanted && found.file !== wanted) {
-    console.warn(`PREVIEW_BUILD=${wanted} 를 찾지 못해 ${found.file} 를 씁니다.`);
+    console.warn(`PREVIEW_BUILD=${wanted} not found; using ${found.file} instead.`);
   }
   return parseBuild(fs.readFileSync(found.full, 'utf8'), found.file);
 })();
@@ -397,7 +397,7 @@ const OVERLAY_STEPS = (() => {
   // whether to draw them from iconMode, and ?icons= flips that per frame.
   const stepIcons = require(path.join(__dirname, '..', 'src', 'main', 'icons.js'));
   const loaded = stepIcons.load(ICONS_DIR);
-  if (loaded.error) console.warn('아이콘을 읽지 못했습니다:', loaded.error);
+  if (loaded.error) console.warn('Could not read the icons:', loaded.error);
   return OVERLAY_BUILD.steps.map((step) => ({
     ...step,
     icons: stepIcons

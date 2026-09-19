@@ -46,7 +46,7 @@ function get(url) {
       }
     );
     req.on('error', reject);
-    req.setTimeout(30000, () => req.destroy(new Error('시간 초과')));
+    req.setTimeout(30000, () => req.destroy(new Error('Timed out')));
   });
 }
 
@@ -71,7 +71,7 @@ async function downloadIcons({ manifestPath, dir, onProgress = () => {} }) {
   try {
     wanted = wantedFrom(manifestPath);
   } catch (err) {
-    return { ok: false, downloaded: 0, skipped: 0, failed: 0, message: `목록을 읽지 못했습니다: ${err.message}` };
+    return { ok: false, downloaded: 0, skipped: 0, failed: 0, message: `Could not read the list: ${err.message}` };
   }
 
   fs.mkdirSync(dir, { recursive: true });
@@ -115,7 +115,7 @@ async function downloadIcons({ manifestPath, dir, onProgress = () => {} }) {
     downloaded,
     skipped,
     failed: failed.length,
-    message: failed.length ? `${failed.length}개를 받지 못했습니다. 다시 시도해 보세요.` : null,
+    message: failed.length ? `${failed.length} could not be downloaded. Try again.` : null,
   };
 }
 

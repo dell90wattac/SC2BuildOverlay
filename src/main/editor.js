@@ -47,7 +47,7 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
       height: 780,
       minWidth: 720,
       minHeight: 520,
-      title: '빌드오더 편집기',
+      title: 'Build Order Editor',
       icon: iconPath,
       backgroundColor: '#0d1017',
       autoHideMenuBar: true,
@@ -126,7 +126,7 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
 
   ipcMain.handle('editor:read', (_e, source) => {
     const filename = safeName(source);
-    if (!filename) throw new Error('잘못된 파일 이름입니다.');
+    if (!filename) throw new Error('Invalid file name.');
     const full = path.join(buildsDir, filename);
     const text = fs.readFileSync(full, 'utf8');
     const parsed = parseBuild(text, filename);
@@ -156,12 +156,12 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
 
   ipcMain.handle('editor:save', async (_e, { filename, build, replacing }) => {
     const target = safeName(filename);
-    if (!target) return { ok: false, message: '파일 이름을 확인하세요.' };
+    if (!target) return { ok: false, message: 'Check the file name.' };
 
     const text = serializeBuild(build);
     const parsed = parseBuild(text, target);
     if (parsed.problems.length) {
-      return { ok: false, message: `내보낸 내용이 다시 읽히지 않습니다: ${parsed.problems[0].message}` };
+      return { ok: false, message: `What was written back cannot be read again: ${parsed.problems[0].message}` };
     }
 
     const full = path.join(buildsDir, target);
@@ -170,12 +170,12 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
     if (overwriting) {
       const { response } = await ask({
         type: 'question',
-        buttons: ['덮어쓰기', '취소'],
+        buttons: ['Overwrite', 'Cancel'],
         defaultId: 1,
         cancelId: 1,
-        message: `${target} 파일이 이미 있습니다. 덮어쓸까요?`,
+        message: `${target} already exists. Overwrite it?`,
       });
-      if (response === 1) return { ok: false, message: '취소했습니다.' };
+      if (response === 1) return { ok: false, message: 'Cancelled.' };
     }
 
     // Taking a slot another file declares would otherwise be resolved by
@@ -192,7 +192,7 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
           setSlotInFile(path.join(buildsDir, holder.source), giveBack);
           swapped = { name: holder.name, slot: giveBack };
         } catch (err) {
-          return { ok: false, message: `${holder.source} 의 슬롯을 바꿀 수 없습니다: ${err.message}` };
+          return { ok: false, message: `Could not change the slot on ${holder.source}: ${err.message}` };
         }
       }
     }
@@ -211,19 +211,19 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
 
   ipcMain.handle('editor:delete', async (_e, source) => {
     const filename = safeName(source);
-    if (!filename) return { ok: false, message: '잘못된 파일 이름입니다.' };
+    if (!filename) return { ok: false, message: 'Invalid file name.' };
     const full = path.join(buildsDir, filename);
-    if (!fs.existsSync(full)) return { ok: false, message: '파일이 없습니다.' };
+    if (!fs.existsSync(full)) return { ok: false, message: 'No such file.' };
 
     const { response } = await ask({
       type: 'warning',
-      buttons: ['휴지통으로 이동', '취소'],
+      buttons: ['Move to trash', 'Cancel'],
       defaultId: 1,
       cancelId: 1,
-      message: `${filename} 을 삭제할까요?`,
-      detail: '휴지통으로 이동하므로 되돌릴 수 있습니다.',
+      message: `Delete ${filename}?`,
+      detail: 'It goes to the trash, so this can be undone.',
     });
-    if (response === 1) return { ok: false, message: '취소했습니다.' };
+    if (response === 1) return { ok: false, message: 'Cancelled.' };
 
     await shell.trashItem(full);
     library.load();
@@ -253,8 +253,8 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
   ipcMain.handle('editor:open-export', async () => {
     const { canceled, filePaths } = await (win && !win.isDestroyed()
       ? dialog.showOpenDialog(win, {
-          title: '빌드 익스포트 열기',
-          filters: [{ name: '빌드 익스포트 (JSON)', extensions: ['json'] }],
+          title: 'Open a build export',
+          filters: [{ name: 'Build export (JSON)', extensions: ['json'] }],
           properties: ['openFile'],
         })
       : dialog.showOpenDialog({ properties: ['openFile'] }));
@@ -266,7 +266,7 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
     try {
       data = JSON.parse(fs.readFileSync(file, 'utf8'));
     } catch (err) {
-      return { ok: false, message: `JSON 을 읽을 수 없습니다: ${err.message}` };
+      return { ok: false, message: `Could not read the JSON: ${err.message}` };
     }
 
     const probe = convert(data);
@@ -284,7 +284,7 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
 
   /** Converts the opened export's chosen branch with the chosen options. */
   ipcMain.handle('editor:convert-export', (_e, { branchId, options } = {}) => {
-    if (!lastExport) return { ok: false, message: '먼저 익스포트 파일을 여세요.' };
+    if (!lastExport) return { ok: false, message: 'Open an export file first.' };
     const result = convert(lastExport.data, { ...options, branchId });
     if (!result.ok) return result;
     return {
@@ -321,8 +321,8 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
   ipcMain.handle('editor:open-replay', async () => {
     const dir = replayTool.defaultDir();
     const options = {
-      title: '리플레이 열기',
-      filters: [{ name: 'SC2 리플레이', extensions: ['SC2Replay'] }],
+      title: 'Open a replay',
+      filters: [{ name: 'SC2 replay', extensions: ['SC2Replay'] }],
       properties: ['openFile'],
       ...(dir ? { defaultPath: dir } : {}),
     };
@@ -336,27 +336,27 @@ function setupEditor({ buildsDir, iconPath, library, getGameState, replayTool })
     if (!result.ok) return result;
 
     const replay = (result.replays || [])[0];
-    if (!replay) return { ok: false, message: '리플레이를 읽지 못했습니다.' };
+    if (!replay) return { ok: false, message: 'Could not read the replay.' };
 
     lastReplay = { file: filePaths[0] };
     return { ok: true, replay };
   });
 
   ipcMain.handle('editor:convert-replay', async (_e, { player, minutes, extras } = {}) => {
-    if (!lastReplay) return { ok: false, message: '먼저 리플레이를 여세요.' };
+    if (!lastReplay) return { ok: false, message: 'Open a replay first.' };
     const result = await replayTool.convert(lastReplay.file, { player, minutes, extras });
     if (!result.ok) return result;
 
     const first = (result.builds || [])[0];
-    if (!first) return { ok: false, message: '단계를 하나도 찾지 못했습니다.' };
+    if (!first) return { ok: false, message: 'No steps were found at all.' };
 
     // Straight through the normal parser, so a replay-made build is held to
     // exactly the same rules as a hand-written one. parseBuild returns the
     // fields flat, the same shape `editor:read` reassembles for the form.
     const parsed = parseBuild(first.text, path.basename(lastReplay.file));
     if (!parsed.steps.length) {
-      const why = (parsed.problems || []).map((p) => `${p.line}행: ${p.message}`).join(' · ');
-      return { ok: false, message: why || '읽을 수 있는 단계가 없습니다.' };
+      const why = (parsed.problems || []).map((p) => `line ${p.line}: ${p.message}`).join(' · ');
+      return { ok: false, message: why || 'No readable steps.' };
     }
     return {
       ok: true,

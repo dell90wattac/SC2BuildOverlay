@@ -8,17 +8,17 @@
  *
  * - `prov.plan` steps are filler production the site generates to pad the
  *   timeline (one entry per Marine, ~100 of them). Runs of them collapse into a
- *   single "계속 생산" line instead of burying the real decisions.
+ *   single "keep producing" line instead of burying the real decisions.
  * - `prov.imp: 'situational'` steps are things pros only sometimes do; they are
  *   kept but marked, or dropped entirely at the caller's choice.
  * - `track.morphs` become their own steps, so a Command Center that becomes an
  *   Orbital Command at 1:45 shows up at 1:45.
- * - `prov.ph` (opening/early/mid) maps onto our `[구간]` markers.
+ * - `prov.ph` (opening/early/mid) maps onto our `[phase]` markers.
  */
 
 const { translateKey, parseMatchup, raceCode } = require('./translate');
 
-const PHASES = { opening: '오프닝', early: '초반', mid: '중반', late: '후반' };
+const PHASES = { opening: 'Opening', early: 'Early', mid: 'Mid', late: 'Late' };
 
 const DEFAULTS = {
   // Filler production: 'collapse' into one line, or 'drop' outright.
@@ -151,16 +151,16 @@ function convert(data, options = {}) {
   const branch = opts.branchId
     ? usable.find((b) => b.id === opts.branchId) || usable[0]
     : usable[0];
-  if (!branch) return { ok: false, message: '변환할 단계가 없습니다.' };
+  if (!branch) return { ok: false, message: 'No steps to convert.' };
 
   const ignored = all.filter((b) => !usable.includes(b));
   if (ignored.length) {
     const counts = new Map();
     for (const b of ignored) counts.set(b.race, (counts.get(b.race) || 0) + 1);
-    const summary = [...counts].map(([race, n]) => `${race} ${n}개`).join(', ');
+    const summary = [...counts].map(([race, n]) => `${race} ${n}`).join(', ');
     notes.push(
-      `이 익스포트에 다른 종족 트리도 들어있어 제외했습니다 (${summary}). ` +
-        '사이트에서 이전에 보던 빌드가 함께 내보내집니다.'
+      `This export also holds trees for other races, which were left out (${summary}). ` +
+        'The site exports builds you looked at earlier along with this one.'
     );
   }
 
@@ -233,7 +233,7 @@ function convert(data, options = {}) {
         if (step.note && !already.note) already.note = step.note;
         continue;
       }
-      const line = { ...step, action: `${step.action} 계속 생산` };
+      const line = { ...step, action: `${step.action}, keep producing` };
       fillerSeen.set(step.key, line);
       kept.push(line);
       continue;
@@ -245,7 +245,7 @@ function convert(data, options = {}) {
         continue;
       }
       const pct = Math.round(step.frequency * 100);
-      step.note = step.note ? `${step.note} / 상황부 ${pct}%` : `상황부 ${pct}%`;
+      step.note = step.note ? `${step.note} / situational ${pct}%` : `situational ${pct}%`;
     }
 
     kept.push(step);
@@ -263,18 +263,18 @@ function convert(data, options = {}) {
 
   const meta = [];
   if (data.source && data.source.games) {
-    const wr = data.source.wr != null ? ` 승률 ${Math.round(data.source.wr * 100)}%` : '';
-    meta.push(`출처 표본 ${data.source.games}판${wr}`);
+    const wr = data.source.wr != null ? `, ${Math.round(data.source.wr * 100)}% win rate` : '';
+    meta.push(`source sample ${data.source.games} games${wr}`);
   }
   if (branch.games) {
-    const wr = branch.winRate != null ? ` 승률 ${Math.round(branch.winRate * 100)}%` : '';
-    meta.push(`이 분기 ${branch.games}판${wr}`);
+    const wr = branch.winRate != null ? `, ${Math.round(branch.winRate * 100)}% win rate` : '';
+    meta.push(`this branch ${branch.games} games${wr}`);
   }
-  if (data.mapName) meta.push(`맵 ${data.mapName}`);
+  if (data.mapName) meta.push(`map ${data.mapName}`);
 
-  if (collapsedFiller) notes.push(`반복 생산 ${collapsedFiller}줄을 "계속 생산" 으로 합쳤습니다.`);
-  if (droppedSituational) notes.push(`빈도가 낮은 상황부 단계 ${droppedSituational}개를 제외했습니다.`);
-  if (missing.size) notes.push(`번역 못 한 용어 ${missing.size}개: ${[...missing].join(', ')}`);
+  if (collapsedFiller) notes.push(`Collapsed ${collapsedFiller} repeated-production lines into "keep producing".`);
+  if (droppedSituational) notes.push(`Left out ${droppedSituational} low-frequency situational steps.`);
+  if (missing.size) notes.push(`${missing.size} terms could not be translated: ${[...missing].join(', ')}`);
 
   return {
     ok: true,

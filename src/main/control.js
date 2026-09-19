@@ -8,7 +8,7 @@ const { safeSend } = require('./send');
 /**
  * The control window: the app's main window and what `npm start` opens. It is
  * where you start and stop the overlay, pick a build, and change settings.
- * Nothing polls and nothing is drawn over the game until you press 시작.
+ * Nothing polls and nothing is drawn over the game until you press Start.
  */
 function setupControl({ buildsDir, iconPath, actions }) {
   let win = null;
@@ -40,7 +40,7 @@ function setupControl({ buildsDir, iconPath, actions }) {
     win.webContents.on('did-finish-load', () => actions.push());
 
     // Closing this window leaves the app in the tray so a running overlay
-    // survives; 종료 (button, tray, or Ctrl+Alt+Q) is what actually quits.
+    // survives; Quit (button, tray, or Ctrl+Alt+Q) is what actually quits.
     win.on('closed', () => {
       win = null;
     });
@@ -70,9 +70,9 @@ function setupControl({ buildsDir, iconPath, actions }) {
    */
   ipcMain.handle('control:pick-sound', async () => {
     const options = {
-      title: '효과음 파일 고르기',
+      title: 'Choose a sound file',
       filters: [
-        { name: '오디오', extensions: ['wav', 'mp3', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'flac', 'webm'] },
+        { name: 'Audio', extensions: ['wav', 'mp3', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'flac', 'webm'] },
       ],
       properties: ['openFile'],
     };
