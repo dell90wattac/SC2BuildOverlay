@@ -44,10 +44,10 @@ try:
     from s2protocol import versions
 except ImportError:
     raise SystemExit('\n'.join([
-        '리플레이를 읽는 데 필요한 것이 없습니다. 아래 두 줄을 실행하세요:',
+        'What this needs to read replays is missing. Run these two lines:',
         r'  python -m venv .venv-replay',
         r'  .venv-replay\Scripts\python.exe -m pip install -r tools\replay-requirements.txt',
-        r'그 다음부터는 python 이 아니라 .venv-replay\Scripts\python.exe 로 이 스크립트를 실행합니다.',
+        r'From then on, run this script with .venv-replay\Scripts\python.exe rather than python.',
     ]))
 
 LOOPS = 22.4  # Legacy of the Void, 'Faster'

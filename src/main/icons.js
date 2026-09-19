@@ -19,6 +19,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 let terms = [];
+let primary = [];
 let baseUrl = null;
 let loadError = null;
 let haveImages = false;
@@ -31,16 +32,25 @@ let shortBy = 0;
  */
 function load(dir) {
   terms = [];
+  primary = [];
   baseUrl = null;
   loadError = null;
   haveImages = false;
   shortBy = 0;
   try {
     const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
-    const entries = Object.entries(manifest.terms || {});
+    const named = Object.entries(manifest.terms || {});
+    /* `aliases` holds the Korean vocabulary this app used to write builds in.
+       They match so that older build files keep their pictures, but they are
+       not offered as suggestions — `primary` is what the editor proposes. */
+    const aliased = Object.entries(manifest.aliases || {});
+    const entries = [...named, ...aliased];
     // Longest first so a composed name is preferred over the building inside it.
     entries.sort((a, b) => b[0].length - a[0].length);
     terms = entries.map(([term, file]) => ({ term, file: file + '.png' }));
+    primary = named
+      .map(([term, file]) => ({ term, file: file + '.png' }))
+      .sort((a, b) => b.term.length - a.term.length);
     baseUrl = pathToFileURL(dir + path.sep).href;
     /* The manifest ships with the app; the images do not — they are fetched on
        request. So a readable manifest says nothing about whether there is
@@ -56,7 +66,7 @@ function load(dir) {
   } catch (err) {
     loadError = err.message;
   }
-  return { count: terms.length, error: loadError };
+  return { count: primary.length, error: loadError };
 }
 
 /* True only when there are pictures to draw. The control window shows the
@@ -110,7 +120,11 @@ function iconsFor(action, max = 3) {
 }
 
 /**
- * Every term the manifest knows, for the editor's suggestions.
+ * Every term the editor should suggest.
+ *
+ * The manifest's aliases are deliberately left out: they match existing build
+ * files but are not a vocabulary anyone should be steered into writing new
+ * builds in.
  *
  * Shortest first — the opposite of the matching order. Matching wants the
  * longest name that fits, so "Barracks Tech Lab" beats "Barracks"; a person
@@ -121,7 +135,7 @@ function iconsFor(action, max = 3) {
  */
 function allTerms() {
   const withImages = loaded();
-  return [...terms]
+  return [...primary]
     .sort((a, b) => a.term.length - b.term.length || a.term.localeCompare(b.term))
     .map(({ term, file }) => ({ term, src: withImages ? baseUrl + file : null }));
 }

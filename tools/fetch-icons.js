@@ -2,7 +2,9 @@
 
 /**
  * Downloads the unit/building/upgrade icons into `assets/icons/` and writes a
- * manifest keyed by the Korean terms the build files actually use.
+ * manifest keyed by the terms the build files actually use, with the older
+ * Korean vocabulary emitted alongside as `aliases` so builds written against it
+ * keep their pictures.
  *
  * Source: https://github.com/BurnySc2/sc2-planner (MIT), whose `src/icons/png`
  * holds the ladder button icons extracted from a StarCraft II install. The art
@@ -16,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const { TERMS } = require('../src/main/translate');
+const { TERMS, TERMS_KO } = require('../src/main/translate');
 
 const REPO = 'BurnySc2/sc2-planner';
 const REF = 'master';
@@ -90,6 +92,23 @@ const ALIASES = {
  * Keyed by the Korean text rather than the dictionary key, so a term written by
  * hand in a build file gets the same icon as one that came from an import.
  */
+/**
+ * The composed add-on names in the app's own vocabulary, matching what
+ * `translateKey` produces for imported builds (Barracks Tech Lab, not a bare
+ * Tech Lab), plus the bare carapace names Zerg builds tend to use.
+ */
+const EXTRA_TERMS_EN = [
+  ['Barracks Tech Lab', 'btn-building-terran-barracks-techlab'],
+  ['Barracks Reactor', 'btn-building-terran-barracks-reactor'],
+  ['Factory Tech Lab', 'btn-building-terran-factory-techlab'],
+  ['Factory Reactor', 'btn-building-terran-factory-reactor'],
+  ['Starport Tech Lab', 'btn-building-terran-starport-techlab'],
+  ['Starport Reactor', 'btn-building-terran-starport-reactor'],
+  ['Carapace Level 1', 'btn-upgrade-zerg-groundcarapace-level1'],
+  ['Carapace Level 2', 'btn-upgrade-zerg-groundcarapace-level2'],
+  ['Carapace Level 3', 'btn-upgrade-zerg-groundcarapace-level3'],
+];
+
 const EXTRA_TERMS = [
   // Add-ons composed with the building they attach to, matching what
   // `translateKey` produces for imported builds (병영 기술실, not a bare 기술실).
@@ -207,11 +226,12 @@ async function main() {
       .filter((p) => p.startsWith(DIR + '/') && p.endsWith('.png'))
       .map((p) => p.slice(DIR.length + 1, -'.png'.length))
   );
-  console.log(`  원본 아이콘 ${available.size}개`);
+  console.log(`  ${available.size} source icons`);
 
-  // Korean term -> icon base name. Terms come from the same dictionary the
-  // build files and the importer use, so anything writable is lookupable.
+  // Term -> icon base name. Terms come from the same dictionary the build
+  // files and the importer use, so anything writable is lookupable.
   const terms = {};
+  const aliases = {};
   const missing = [];
 
   const resolve = (key) => {
@@ -230,23 +250,30 @@ async function main() {
     return null;
   };
 
-  for (const [key, korean] of Object.entries(TERMS)) {
+  for (const [key, term] of Object.entries(TERMS)) {
     const base = resolve(key);
-    if (base) terms[korean] = base;
-    else missing.push({ key, korean });
+    if (base) {
+      terms[term] = base;
+      if (TERMS_KO[key]) aliases[TERMS_KO[key]] = base;
+    } else {
+      missing.push({ key, term });
+    }
+  }
+  for (const [term, base] of EXTRA_TERMS_EN) {
+    if (available.has(base)) terms[term] = base;
+    else missing.push({ key: term, term });
   }
   for (const [korean, base] of EXTRA_TERMS) {
-    if (available.has(base)) terms[korean] = base;
-    else missing.push({ key: korean, korean });
+    if (available.has(base)) aliases[korean] = base;
   }
 
   // A dictionary key can miss the filename pattern and still be covered, because
-  // EXTRA_TERMS maps the same Korean term by hand. Reporting those as missing
-  // would send someone looking for icons that are already there.
-  const stillMissing = missing.filter((m) => !terms[m.korean]);
+  // EXTRA_TERMS_EN maps the same term by hand. Reporting those as missing would
+  // send someone looking for icons that are already there.
+  const stillMissing = missing.filter((m) => !terms[m.term]);
 
-  const needed = [...new Set(Object.values(terms))];
-  console.log(`  한글 용어 ${Object.keys(terms).length}개 -> 이미지 ${needed.length}개`);
+  const needed = [...new Set([...Object.values(terms), ...Object.values(aliases)])];
+  console.log(`  ${Object.keys(terms).length} terms + ${Object.keys(aliases).length} aliases -> ${needed.length} images`);
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   let downloaded = 0;
@@ -260,29 +287,30 @@ async function main() {
     }
     const buf = await get(RAW + encodeURIComponent(base) + '.png', true);
     const size = pngSize(buf);
-    if (!size) throw new Error(`PNG 가 아닙니다: ${base}`);
+    if (!size) throw new Error(`Not a PNG: ${base}`);
     sizes[`${size.width}x${size.height}`] = (sizes[`${size.width}x${size.height}`] || 0) + 1;
     fs.writeFileSync(dest, buf);
     downloaded += 1;
     if (downloaded % 25 === 0) console.log(`  ${downloaded}/${needed.length}`);
   }
-  console.log(`  내려받음 ${downloaded}개, 이미 있던 것 ${reused}개`);
-  if (Object.keys(sizes).length) console.log(`  크기: ${JSON.stringify(sizes)}`);
+  console.log(`  ${downloaded} downloaded, ${reused} already present`);
+  if (Object.keys(sizes).length) console.log(`  sizes: ${JSON.stringify(sizes)}`);
 
   const manifest = {
     source: `https://github.com/${REPO} (${REF}/${DIR})`,
-    note: '코드는 MIT. 아이콘 그림은 Blizzard Entertainment 저작물이며 개인·비상업 용도로만 사용합니다.',
+    note: 'Code is MIT. The icon images are Blizzard Entertainment works, used for personal, non-commercial purposes only.',
     generated: new Date().toISOString().slice(0, 10),
     terms,
+    aliases,
   };
   fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
-  console.log(`매니페스트: ${path.relative(process.cwd(), MANIFEST)}`);
+  console.log(`manifest: ${path.relative(process.cwd(), MANIFEST)}`);
 
   if (stillMissing.length) {
-    console.log(`\n아이콘 없는 용어 ${stillMissing.length}개 (오버레이에서 글자만 표시됩니다):`);
-    stillMissing.forEach((m) => console.log(`  ${m.korean}`));
+    console.log(`\n${stillMissing.length} terms have no icon (the overlay shows text only):`);
+    stillMissing.forEach((m) => console.log(`  ${m.term}`));
   } else {
-    console.log('\n사전의 모든 용어에 아이콘이 있습니다.');
+    console.log('\nEvery term in the dictionary has an icon.');
   }
 }
 

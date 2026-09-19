@@ -2,54 +2,54 @@ name: 12 Pool (Sample)
 race: Z
 vs: P
 slot: 1
-notes: 형식을 보여주는 예시입니다. 편집기에서 고치거나 지우고 직접 만드세요.
+notes: A sample showing the format. Edit it in the editor, or delete it and write your own.
 
-0:00  @12  부화장
+0:00  @12  Hatchery
 
-[오프닝]
-0:53  @12  산란못
-0:57  @12  대군주
-1:45  @15  저글링
-1:50  @17  부화장
+[Opening]
+0:53  @12  Spawning Pool
+0:57  @12  Overlord
+1:45  @15  Zergling
+1:50  @17  Hatchery
 
-[초반]
-2:04  @17  여왕
-2:10  @20  추출장
-2:23  @20  대군주
-3:15       여왕 계속 생산
-3:30  @28  대군주
-3:47  @31  대사 촉진
-4:03  @32  대군주
-4:10  @37  부화장
-4:24  @37  추출장
-4:25  @37  바퀴 소굴
-4:42       번식지
-4:42  @40  대군주
+[Early]
+2:04  @17  Queen
+2:10  @20  Extractor
+2:23  @20  Overlord
+3:15       Queen, keep producing
+3:30  @28  Overlord
+3:47  @31  Metabolic Boost
+4:03  @32  Overlord
+4:10  @37  Hatchery
+4:24  @37  Extractor
+4:25  @37  Roach Warren
+4:42       Lair
+4:42  @40  Overlord
 
-[중반]
-5:13  @47  대군주
-5:18  @48  포자 촉수
-5:28  @52  진화장
-5:30  @52  추출장
-5:36  @52  대군주
-5:37  @52  포자 촉수
-5:43  @52  바퀴  // 상황부 46%
-6:03  @57  대군주
-6:06  @57  추출장
-6:15  @64  진화장  // 상황부 44%
-6:31  @66  대군주
-6:41  @68  대군주
-6:43  @68  포자 촉수  // 상황부 38%
-6:50  @68  히드라리스크 굴  // 상황부 50%
-6:55  @74  대군주
-7:06  @84  추출장  // 상황부 44%
-7:28  @84  대군주
-7:38  @84  히드라리스크  // 상황부 40%
-7:39  @87  추출장  // 상황부 38%
-7:40  @87  부화장
-7:42  @90  대군주
-7:55  @92  대군주  // 상황부 48%
-8:03  @96  대군주  // 상황부 44%
-8:14  @106 대군주  // 상황부 35%
-8:20       저글링 계속 생산
-8:30       대군주 계속 생산
+[Mid]
+5:13  @47  Overlord
+5:18  @48  Spore Crawler
+5:28  @52  Evolution Chamber
+5:30  @52  Extractor
+5:36  @52  Overlord
+5:37  @52  Spore Crawler
+5:43  @52  Roach  // situational 46%
+6:03  @57  Overlord
+6:06  @57  Extractor
+6:15  @64  Evolution Chamber  // situational 44%
+6:31  @66  Overlord
+6:41  @68  Overlord
+6:43  @68  Spore Crawler  // situational 38%
+6:50  @68  Hydralisk Den  // situational 50%
+6:55  @74  Overlord
+7:06  @84  Extractor  // situational 44%
+7:28  @84  Overlord
+7:38  @84  Hydralisk  // situational 40%
+7:39  @87  Extractor  // situational 38%
+7:40  @87  Hatchery
+7:42  @90  Overlord
+7:55  @92  Overlord  // situational 48%
+8:03  @96  Overlord  // situational 44%
+8:14  @106 Overlord  // situational 35%
+8:20       Zergling, keep producing
+8:30       Overlord, keep producing

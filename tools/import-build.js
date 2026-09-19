@@ -35,7 +35,7 @@ const value = (name, fallback) => {
 
 const source = argv.find((a) => !a.startsWith('--'));
 if (!source) {
-  console.error('사용법: node tools/import-build.js <export.json> [--list] [--branch=id] [--slot=N]');
+  console.error('Usage: node tools/import-build.js <export.json> [--list] [--branch=id] [--slot=N]');
   process.exit(1);
 }
 
@@ -43,7 +43,7 @@ let data;
 try {
   data = JSON.parse(fs.readFileSync(source, 'utf8'));
 } catch (err) {
-  console.error(`JSON 을 읽을 수 없습니다: ${err.message}`);
+  console.error(`Could not read the JSON: ${err.message}`);
   process.exit(1);
 }
 
@@ -64,13 +64,13 @@ if (!result.ok) {
 }
 
 if (flag('list')) {
-  console.log(`${data.name || '(이름 없음)'}  —  분기 ${result.branches.length}개\n`);
+  console.log(`${data.name || '(no name)'}  —  ${result.branches.length} branches\n`);
   for (const b of result.branches) {
-    const wr = b.winRate != null ? `승률 ${String(Math.round(b.winRate * 100)).padStart(3)}%` : '승률 —   ';
-    const games = b.games != null ? `${String(b.games).padStart(4)}판` : '   —판';
-    console.log(`  ${b.id === result.selected ? '▶' : ' '} ${b.id.padEnd(10)} ${games}  ${wr}  ${String(b.steps).padStart(4)}단계  ${b.label}`);
+    const wr = b.winRate != null ? `${String(Math.round(b.winRate * 100)).padStart(3)}% WR` : '  — WR';
+    const games = b.games != null ? `${String(b.games).padStart(4)}g` : '   —g';
+    console.log(`  ${b.id === result.selected ? '▶' : ' '} ${b.id.padEnd(10)} ${games}  ${wr}  ${String(b.steps).padStart(4)} steps  ${b.label}`);
   }
-  console.log('\n--branch=<id> 로 고를 수 있습니다.');
+  console.log('\nPick one with --branch=<id>.');
   process.exit(0);
 }
 
@@ -82,8 +82,8 @@ const text = serializeBuild(result.build);
 // The converter must not produce something the app cannot read back.
 const reparsed = parseBuild(text, 'check.txt');
 if (reparsed.problems.length) {
-  console.error('변환 결과가 다시 읽히지 않습니다:');
-  reparsed.problems.forEach((p) => console.error(`  ${p.line}행: ${p.message}`));
+  console.error('The converted result cannot be read back:');
+  reparsed.problems.forEach((p) => console.error(`  line ${p.line}: ${p.message}`));
   process.exit(1);
 }
 
@@ -94,17 +94,17 @@ if (flag('stdout')) {
   const filename = /\.(txt|build|md)$/i.test(base) ? base : `${base}.txt`;
   const target = path.join(ROOT, 'builds', filename);
   fs.writeFileSync(target, text, 'utf8');
-  console.log(`저장: builds/${filename}  (${reparsed.steps.length}단계)`);
+  console.log(`Saved: builds/${filename}  (${reparsed.steps.length} steps)`);
 }
 
 console.error('');
 console.error(
-  `분기: ${result.selected}  ·  단계 ${reparsed.steps.length}개  ·  ` +
-    `메모 ${keepNotes ? '포함 (--no-notes 로 제외)' : '제외 (--notes 로 포함)'}`
+  `branch: ${result.selected}  ·  ${reparsed.steps.length} steps  ·  ` +
+    `notes ${keepNotes ? 'included (--no-notes to drop)' : 'dropped (--notes to include)'}`
 );
 result.notes.forEach((n) => console.error(`  ⚠ ${n}`));
 if (result.missing.length) {
   console.error('');
-  console.error('  사전에 추가하려면 src/main/translate.js 의 TERMS 에 넣으세요:');
+  console.error('  To add them to the dictionary, put them in TERMS in src/main/translate.js:');
   result.missing.forEach((k) => console.error(`    ${k}: '',`));
 }

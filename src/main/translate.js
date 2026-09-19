@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * English internal names (as used by build-order sites' exports) to the
- * official Korean SC2 terms. The vocabulary matches what the hand-written
+ * Internal names (as used by build-order sites' exports) to the in-game term
+ * the build files are written in. The vocabulary matches what the hand-written
  * builds in `builds/` already use, so imported builds read the same as ones
  * written by hand.
  *
@@ -11,6 +11,227 @@
  */
 
 const TERMS = {
+  // ---------------------------------------------------------------- Terran
+  CommandCenter: 'Command Center',
+  OrbitalCommand: 'Orbital Command',
+  PlanetaryFortress: 'Planetary Fortress',
+  SupplyDepot: 'Supply Depot',
+  Refinery: 'Refinery',
+  Barracks: 'Barracks',
+  EngineeringBay: 'Engineering Bay',
+  Bunker: 'Bunker',
+  MissileTurret: 'Missile Turret',
+  SensorTower: 'Sensor Tower',
+  Factory: 'Factory',
+  GhostAcademy: 'Ghost Academy',
+  Armory: 'Armory',
+  Starport: 'Starport',
+  FusionCore: 'Fusion Core',
+  TechLab: 'Tech Lab',
+  Reactor: 'Reactor',
+
+  SCV: 'SCV',
+  MULE: 'MULE',
+  Marine: 'Marine',
+  Marauder: 'Marauder',
+  Reaper: 'Reaper',
+  Ghost: 'Ghost',
+  Hellion: 'Hellion',
+  HellionTank: 'Hellbat',
+  Hellbat: 'Hellbat',
+  WidowMine: 'Widow Mine',
+  SiegeTank: 'Siege Tank',
+  Cyclone: 'Cyclone',
+  Thor: 'Thor',
+  Viking: 'Viking',
+  Medivac: 'Medivac',
+  Nuke: 'Nuke',
+  Liberator: 'Liberator',
+  Raven: 'Raven',
+  Banshee: 'Banshee',
+  Battlecruiser: 'Battlecruiser',
+
+  Stimpack: 'Stimpack',
+  CombatShield: 'Combat Shield',
+  ConcussiveShells: 'Concussive Shells',
+  InfantryWeapons1: 'Infantry Weapons Level 1',
+  InfantryWeapons2: 'Infantry Weapons Level 2',
+  InfantryWeapons3: 'Infantry Weapons Level 3',
+  InfantryArmor1: 'Infantry Armor Level 1',
+  InfantryArmor2: 'Infantry Armor Level 2',
+  InfantryArmor3: 'Infantry Armor Level 3',
+  VehicleWeapons1: 'Vehicle Weapons Level 1',
+  VehicleWeapons2: 'Vehicle Weapons Level 2',
+  VehicleWeapons3: 'Vehicle Weapons Level 3',
+  VehicleAndShipPlating1: 'Vehicle and Ship Plating Level 1',
+  VehicleAndShipPlating2: 'Vehicle and Ship Plating Level 2',
+  VehicleAndShipPlating3: 'Vehicle and Ship Plating Level 3',
+  VehicleAndShipArmor1: 'Vehicle and Ship Armor Level 1',
+  VehicleAndShipArmor2: 'Vehicle and Ship Armor Level 2',
+  VehicleAndShipArmor3: 'Vehicle and Ship Armor Level 3',
+  ShipWeapons1: 'Ship Weapons Level 1',
+  ShipWeapons2: 'Ship Weapons Level 2',
+  ShipWeapons3: 'Ship Weapons Level 3',
+  HiSecAutoTracking: 'Hi-Sec Auto Tracking',
+  BuildingArmor: 'Neosteel Armor',
+  NeosteelArmor: 'Neosteel Armor',
+  CloakingField: 'Cloaking Field',
+  BansheeSpeed: 'Banshee Speed',
+  DrillingClaws: 'Drilling Claws',
+  SmartServos: 'Smart Servos',
+  InfernalPreigniter: 'Infernal Preigniter',
+  YamatoCannon: 'Yamato Cannon',
+  PersonalCloaking: 'Personal Cloaking',
+  MagFieldAccelerator: 'Mag-Field Accelerator',
+  InterferenceMatrix: 'Interference Matrix',
+  CaduceusReactor: 'Caduceus Reactor',
+  AdvancedBallistics: 'Advanced Ballistics',
+
+  // ---------------------------------------------------------------- Zerg
+  Hatchery: 'Hatchery',
+  Lair: 'Lair',
+  Hive: 'Hive',
+  Extractor: 'Extractor',
+  SpawningPool: 'Spawning Pool',
+  EvolutionChamber: 'Evolution Chamber',
+  SpineCrawler: 'Spine Crawler',
+  SporeCrawler: 'Spore Crawler',
+  RoachWarren: 'Roach Warren',
+  BanelingNest: 'Baneling Nest',
+  HydraliskDen: 'Hydralisk Den',
+  LurkerDen: 'Lurker Den',
+  InfestationPit: 'Infestation Pit',
+  Spire: 'Spire',
+  GreaterSpire: 'Greater Spire',
+  NydusNetwork: 'Nydus Network',
+  NydusCanal: 'Nydus Canal',
+  UltraliskCavern: 'Ultralisk Cavern',
+  CreepTumor: 'Creep Tumor',
+
+  Larva: 'Larva',
+  Drone: 'Drone',
+  Overlord: 'Overlord',
+  Overseer: 'Overseer',
+  Queen: 'Queen',
+  Zergling: 'Zergling',
+  Baneling: 'Baneling',
+  Roach: 'Roach',
+  Ravager: 'Ravager',
+  Hydralisk: 'Hydralisk',
+  Lurker: 'Lurker',
+  Infestor: 'Infestor',
+  SwarmHost: 'Swarm Host',
+  Mutalisk: 'Mutalisk',
+  Corruptor: 'Corruptor',
+  BroodLord: 'Brood Lord',
+  Viper: 'Viper',
+  Ultralisk: 'Ultralisk',
+
+  MetabolicBoost: 'Metabolic Boost',
+  AdrenalGlands: 'Adrenal Glands',
+  CentrifugalHooks: 'Centrifugal Hooks',
+  GlialReconstitution: 'Glial Reconstitution',
+  TunnelingClaws: 'Tunneling Claws',
+  GroovedSpines: 'Grooved Spines',
+  MuscularAugments: 'Muscular Augments',
+  Frenzy: 'Frenzy',
+  Burrow: 'Burrow',
+  PneumatizedCarapace: 'Pneumatized Carapace',
+  ChitinousPlating: 'Chitinous Plating',
+  AnabolicSynthesis: 'Anabolic Synthesis',
+  AdaptiveTalons: 'Adaptive Talons',
+  SeismicSpines: 'Seismic Spines',
+  NeuralParasite: 'Neural Parasite',
+  MeleeAttacks1: 'Melee Attacks Level 1',
+  MeleeAttacks2: 'Melee Attacks Level 2',
+  MeleeAttacks3: 'Melee Attacks Level 3',
+  MissileAttacks1: 'Missile Attacks Level 1',
+  MissileAttacks2: 'Missile Attacks Level 2',
+  MissileAttacks3: 'Missile Attacks Level 3',
+  GroundCarapace1: 'Ground Carapace Level 1',
+  GroundCarapace2: 'Ground Carapace Level 2',
+  GroundCarapace3: 'Ground Carapace Level 3',
+  FlyerAttacks1: 'Flyer Attacks Level 1',
+  FlyerAttacks2: 'Flyer Attacks Level 2',
+  FlyerAttacks3: 'Flyer Attacks Level 3',
+  FlyerCarapace1: 'Flyer Carapace Level 1',
+  FlyerCarapace2: 'Flyer Carapace Level 2',
+  FlyerCarapace3: 'Flyer Carapace Level 3',
+
+  // ---------------------------------------------------------------- Protoss
+  Nexus: 'Nexus',
+  Pylon: 'Pylon',
+  Assimilator: 'Assimilator',
+  Gateway: 'Gateway',
+  WarpGate: 'Warp Gate',
+  ChronoBoost: 'Chrono Boost',
+  Forge: 'Forge',
+  PhotonCannon: 'Photon Cannon',
+  ShieldBattery: 'Shield Battery',
+  CyberneticsCore: 'Cybernetics Core',
+  RoboticsFacility: 'Robotics Facility',
+  RoboticsBay: 'Robotics Bay',
+  Stargate: 'Stargate',
+  FleetBeacon: 'Fleet Beacon',
+  TwilightCouncil: 'Twilight Council',
+  TemplarArchives: 'Templar Archives',
+  DarkShrine: 'Dark Shrine',
+
+  Probe: 'Probe',
+  Zealot: 'Zealot',
+  Stalker: 'Stalker',
+  Sentry: 'Sentry',
+  Adept: 'Adept',
+  HighTemplar: 'High Templar',
+  DarkTemplar: 'Dark Templar',
+  Archon: 'Archon',
+  Immortal: 'Immortal',
+  Colossus: 'Colossus',
+  Disruptor: 'Disruptor',
+  Observer: 'Observer',
+  WarpPrism: 'Warp Prism',
+  Phoenix: 'Phoenix',
+  VoidRay: 'Void Ray',
+  Oracle: 'Oracle',
+  Tempest: 'Tempest',
+  Carrier: 'Carrier',
+  Mothership: 'Mothership',
+
+  WarpGateResearch: 'Warp Gate Research',
+  Charge: 'Charge',
+  Blink: 'Blink',
+  ResonatingGlaives: 'Resonating Glaives',
+  PsiStorm: 'Psi Storm',
+  GraviticBoosters: 'Gravitic Boosters',
+  GraviticDrive: 'Gravitic Drive',
+  ExtendedThermalLance: 'Extended Thermal Lance',
+  ShadowStride: 'Shadow Stride',
+  AnionPulseCrystals: 'Anion Pulse Crystals',
+  FluxVanes: 'Flux Vanes',
+  TectonicDestabilizers: 'Tectonic Destabilizers',
+  AirWeapons1: 'Air Weapons Level 1',
+  AirWeapons2: 'Air Weapons Level 2',
+  AirWeapons3: 'Air Weapons Level 3',
+  GroundWeapons1: 'Ground Weapons Level 1',
+  GroundWeapons2: 'Ground Weapons Level 2',
+  GroundWeapons3: 'Ground Weapons Level 3',
+  AirArmor1: 'Air Armor Level 1',
+  AirArmor2: 'Air Armor Level 2',
+  AirArmor3: 'Air Armor Level 3',
+  GroundArmor1: 'Ground Armor Level 1',
+  GroundArmor2: 'Ground Armor Level 2',
+  GroundArmor3: 'Ground Armor Level 3',
+  ShieldsLevel1: 'Shields Level 1',
+  ShieldsLevel2: 'Shields Level 2',
+  ShieldsLevel3: 'Shields Level 3',
+};
+
+/**
+ * The Korean terms this app used to write builds in. Kept so that build files
+ * and icon lookups written against the old vocabulary still resolve: the icon
+ * manifest carries these as aliases alongside the English terms.
+ */
+const TERMS_KO = {
   // ---------------------------------------------------------------- Terran
   CommandCenter: '사령부',
   OrbitalCommand: '궤도 사령부',
@@ -246,8 +467,8 @@ function raceCode(race) {
  * Upgrade keys come through race-prefixed in some exports, because that is how
  * the game names them internally: `ZergMissileAttacks1` for what the dictionary
  * has as `MissileAttacks1`. The suffixes are already race-unique (Terran has
- * 보병 무기, Protoss 지상 무기, Zerg 근접/발사 공격), so dropping the prefix
- * cannot land on another race's upgrade.
+ * Infantry Weapons, Protoss Ground Weapons, Zerg Melee/Missile Attacks), so
+ * dropping the prefix cannot land on another race's upgrade.
  *
  * Only reached when the whole key missed, so `Zergling` is never mangled into
  * `ling` — and a key that stays unknown is still reported under its original
@@ -263,10 +484,11 @@ function lookup(key) {
 
 /**
  * Translates one step key. `parentKey` is the building an add-on attaches to,
- * so a bare `TechLab` becomes 병영 기술실 rather than a nameless 기술실.
+ * so a bare `TechLab` becomes `Barracks Tech Lab` rather than a nameless
+ * `Tech Lab`.
  *
- * Returns { text, missing } — `missing` lists keys with no Korean term, which
- * the caller is expected to surface rather than swallow.
+ * Returns { text, missing } — `missing` lists keys with no term, which the
+ * caller is expected to surface rather than swallow.
  */
 function translateKey(key, parentKey) {
   const missing = [];
@@ -282,4 +504,4 @@ function translateKey(key, parentKey) {
   return { text: term || key, missing };
 }
 
-module.exports = { TERMS, ADDONS, translateKey, parseMatchup, raceCode };
+module.exports = { TERMS, TERMS_KO, ADDONS, translateKey, parseMatchup, raceCode };
