@@ -13,6 +13,7 @@ const { safeSend } = require('./send');
 const stepIcons = require('./icons');
 const { downloadIcons } = require('./icon-download');
 const { createReplayTool } = require('./replay');
+const { setupAwayClock } = require('./away');
 
 // Width at 100%; the panel is laid out in rem off one root font-size, so the
 // content width scales linearly with the Size setting.
@@ -140,6 +141,7 @@ let config = null;
 let editor = null;
 let control = null;
 let watcher = null;
+let awayClock = null;
 
 /**
  * `running` is the master switch. While false nothing polls the game and
@@ -573,13 +575,8 @@ function resetProgress() {
 }
 
 /**
- * Showing the overlay and running the clock are separate axes. The overlay can
- * sit on screen parked at 0:00 while stopped, so you can line up a build before
- * the game and press Start when it actually begins.
- */
-/**
  * While stopped, optionally wait for a game to begin and start then. Pressing
- * Pressing Start by hand at the right moment is the app's biggest bit of friction: too
+ * Start by hand at the right moment is the app's biggest bit of friction: too
  * early and nothing happens, too late and the opening is already marked done.
  *
  * This is a separate, slower poll so that "nothing reads SC2 while stopped"
@@ -593,6 +590,11 @@ function syncWatcher() {
 
 const isWatching = () => Boolean(!running && config.get('autoStartOnGame'));
 
+/**
+ * Showing the overlay and running the clock are separate axes. The overlay can
+ * sit on screen parked at 0:00 while stopped, so you can line up a build before
+ * the game and press Start when it actually begins.
+ */
 function start() {
   if (running) return;
   running = true;
@@ -862,6 +864,9 @@ function registerShortcuts() {
   bind('Control+Alt+E', () => editor.open());
   bind('Control+Alt+Q', () => app.quit());
 
+  // The away clock is its own tool; it has nothing to do with the build.
+  bind('F3', () => awayClock.toggle());
+
   for (let slot = 1; slot <= 9; slot += 1) {
     bind(`Control+Alt+${slot}`, () => selectSlot(slot));
   }
@@ -909,6 +914,8 @@ function refreshTrayMenu() {
       { type: 'separator' },
       { label: 'Show/hide overlay  (Ctrl+Alt+O)', click: () => setVisible(!ui.visible) },
       { label: 'Unlock / lock  (Ctrl+Alt+L)', click: () => setLocked(!ui.locked) },
+      { type: 'separator' },
+      { label: 'Away clock  (F3)', click: () => awayClock.toggle() },
       ...(slots.length ? [{ type: 'separator' }, { label: 'Build slots', submenu: slots }] : []),
       { type: 'separator' },
       { label: 'Open builds folder', click: () => shell.openPath(BUILDS_DIR) },
@@ -1008,6 +1015,7 @@ function boot() {
   });
 
   createOverlay();
+  awayClock = setupAwayClock();
   buildTray();
   registerShortcuts();
   control.open();

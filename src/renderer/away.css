@@ -1,0 +1,69 @@
+/* Shares the overlay's bundled font; see overlay.css. */
+@font-face {
+  font-family: Pretendard;
+  src: url('fonts/PretendardVariable.woff2') format('woff2-variations');
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: block;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Pretendard, 'Segoe UI', sans-serif;
+}
+
+.clock {
+  --c: hsl(140 70% 55%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 22px 8px;
+  border: 2px solid var(--c);
+  border-radius: 10px;
+  background: hsl(220 30% 8% / 0.82);
+  color: var(--c);
+  box-shadow: 0 0 18px hsl(0 0% 0% / 0.5);
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  opacity: 0.85;
+}
+
+.time {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.green { --c: hsl(140 70% 55%); }
+.yellow { --c: hsl(52 95% 58%); }
+.orange { --c: hsl(28 100% 58%); }
+.red {
+  --c: hsl(0 90% 60%);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* Past the last threshold the colour has nowhere left to go, so it moves
+   instead — a static red fades into the background after a while. */
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 26px hsl(0 90% 55% / 0.85);
+    background: hsl(0 60% 16% / 0.9);
+  }
+}
